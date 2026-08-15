@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 import '../../domain/services/intelligence_service.dart';
+import '../../domain/services/operations_service.dart';
 import '../../domain/services/retention_service.dart';
 import '../members/member_detail_screen.dart';
 import '../settings/app_update_flow.dart';
@@ -21,6 +22,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DashboardSnapshot? _snap;
   RetentionSnapshot? _retention;
+  OperationsSnapshot? _ops;
   String? _error;
   bool _loading = true;
 
@@ -67,10 +69,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final retention = await ref
           .read(retentionServiceProvider)
           .snapshot(workspace: workspace, importHealth: health);
+      final ops = await ref
+          .read(operationsServiceProvider)
+          .snapshot(workspace: workspace, importHealth: health);
+      await ref
+          .read(opsNotifierProvider)
+          .maybeNotify(
+            workspace: workspace,
+            importHealth: health,
+            snapshot: ops,
+          );
       if (!mounted) return;
       setState(() {
         _snap = snap;
         _retention = retention;
+        _ops = ops;
       });
     } catch (_) {
       if (!mounted) return;
@@ -131,6 +144,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _HealthCard(score: snap.healthScore),
           const SizedBox(height: GpSpacing.md),
           _AttendanceCard(summary: snap.attendance),
+          if (_ops != null) ...[
+            const SizedBox(height: GpSpacing.md),
+            Card(
+              child: ListTile(
+                title: Text(s.capacityUtilization),
+                subtitle: Text(_ops!.capacity.explanation),
+              ),
+            ),
+          ],
           const SizedBox(height: GpSpacing.md),
           _BackupBanner(),
           const SizedBox(height: GpSpacing.md),

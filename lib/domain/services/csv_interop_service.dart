@@ -109,6 +109,68 @@ class CsvInteropService {
     return created;
   }
 
+  Future<String> exportTrials(Workspace workspace) async {
+    final rows =
+        await (_db.select(_db.trials)..where(
+              (t) =>
+                  t.organizationId.equals(workspace.organization.id) &
+                  t.locationId.equals(workspace.location.id),
+            ))
+            .get();
+    final out = StringBuffer()
+      ..writeln('member_id,status,started_at,ends_at,converted_at,source');
+    for (final t in rows) {
+      out.writeln(
+        '${_csv(t.memberId)},${_csv(t.status)},${t.startedAt.toIso8601String()},${t.endsAt.toIso8601String()},${t.convertedAt?.toIso8601String() ?? ''},${_csv(t.source)}',
+      );
+    }
+    return out.toString();
+  }
+
+  Future<String> exportCancellations(Workspace workspace) async {
+    final rows =
+        await (_db.select(_db.cancellationEvents)..where(
+              (t) =>
+                  t.organizationId.equals(workspace.organization.id) &
+                  t.locationId.equals(workspace.location.id),
+            ))
+            .get();
+    final out = StringBuffer()
+      ..writeln('member_id,occurred_at,reason_code,reason_text,source');
+    for (final c in rows) {
+      out.writeln(
+        '${_csv(c.memberId)},${c.occurredAt.toIso8601String()},${_csv(c.reasonCode)},${_csv(c.reasonText)},${_csv(c.source)}',
+      );
+    }
+    return out.toString();
+  }
+
+  String exportOperations({
+    required String locationName,
+    required String explanation,
+    required List<String> peakLines,
+    required List<String> locationLines,
+  }) {
+    final out = StringBuffer()
+      ..writeln('GymPulse operations report')
+      ..writeln('location,$locationName')
+      ..writeln('notes,$explanation')
+      ..writeln()
+      ..writeln('peak_hours')
+      ..writeln('weekday,hour,visits,average,max,p90,rolling_average,label');
+    for (final line in peakLines) {
+      out.writeln(line);
+    }
+    out
+      ..writeln()
+      ..writeln('locations')
+      ..writeln('name,visits,unique,unmatched,active_members,notes');
+    for (final line in locationLines) {
+      out.writeln(line);
+    }
+    return out.toString();
+  }
+
   String _csv(String? value) {
     final raw = value ?? '';
     if (raw.contains(',') || raw.contains('"') || raw.contains('\n')) {

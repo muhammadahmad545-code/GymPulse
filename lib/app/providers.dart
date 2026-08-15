@@ -33,6 +33,8 @@ import '../domain/services/contact_service.dart';
 import '../domain/services/csv_interop_service.dart';
 import '../domain/services/intelligence_service.dart';
 import '../domain/services/local_notification_service.dart';
+import '../domain/services/operations_service.dart';
+import '../domain/services/ops_notifier.dart';
 import '../domain/services/retention_service.dart';
 import '../domain/services/security_service.dart';
 import '../domain/services/workspace_service.dart';
@@ -127,6 +129,16 @@ final retentionServiceProvider = Provider<RetentionService>((ref) {
   );
 });
 
+final operationsServiceProvider = Provider<OperationsService>((ref) {
+  return OperationsService(
+    db: ref.watch(appDatabaseProvider),
+    attendance: ref.watch(attendanceRepositoryProvider),
+    locations: LocalLocationRepository(db: ref.watch(appDatabaseProvider)),
+    members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
+    followUps: ref.watch(followUpRepositoryProvider),
+  );
+});
+
 final intelligenceServiceProvider = Provider<IntelligenceService>((ref) {
   return IntelligenceService(
     db: ref.watch(appDatabaseProvider),
@@ -152,6 +164,13 @@ final contactServiceProvider = Provider<ContactService>(
 final localNotificationServiceProvider = Provider<LocalNotificationService>(
   (ref) => LocalNotificationService(),
 );
+
+final opsNotifierProvider = Provider<OpsNotifier>((ref) {
+  return OpsNotifier(
+    operations: ref.watch(operationsServiceProvider),
+    notifications: ref.watch(localNotificationServiceProvider),
+  );
+});
 
 final securityServiceProvider = Provider<SecurityService>((ref) {
   return SecurityService(

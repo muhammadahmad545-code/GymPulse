@@ -112,6 +112,33 @@ class AppStrings {
   String get trialDefaultDays => 'Default trial length (days)';
   String get notAnAiScore =>
       'Explainable weighted score. Not an AI prediction.';
+  String get capacityUtilization => 'Capacity utilization';
+  String get peakWindows => 'Peak windows';
+  String get locations => 'Locations';
+  String get addLocation => 'Add location';
+  String get switchLocation => 'Switch location';
+  String get currentLocation => 'Current location';
+  String get peakHighAttendance => 'High-attendance threshold';
+  String get operationsReport => 'Operations report';
+  String get exportReports => 'Export reports';
+  String get exportAttendance => 'Export attendance CSV';
+  String get exportFollowUps => 'Export follow-ups CSV';
+  String get exportTrials => 'Export trials CSV';
+  String get exportCancellations => 'Export cancellations CSV';
+  String get reconcileAttendance => 'Reconcile attendance';
+  String get expectedCount => 'Expected source count';
+  String get adapters => 'Attendance adapters';
+  String get importJson => 'Import attendance JSON';
+  String get dailySummary => 'Daily operations summary';
+  String get notificationPrefs => 'Local notifications';
+  String get notifyDailySummary => 'Daily summary';
+  String get notifyImportStale => 'Stale import';
+  String get notifyHighRisk => 'High-risk members';
+  String get notifyExpiryQueue => 'Expiry queue';
+  String get addAnotherLocation =>
+      'Add another location to compare. Data stays on this phone.';
+  String get windowsConnectorHelp =>
+      'Optional free Windows tool: drop official CSV/JSON exports into a folder and it writes a GymPulse attendance file. No paid cloud relay.';
 
   String get searchMembers => 'Search members';
   String get noMembers => 'No members yet. Add a member to get started.';

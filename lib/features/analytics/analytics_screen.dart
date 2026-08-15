@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../app/providers.dart';
 import '../../core/theme/gp_theme.dart';
 import '../../domain/services/intelligence_service.dart';
+import '../../domain/services/operations_service.dart';
 import '../../domain/services/retention_service.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
@@ -17,6 +18,7 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   DashboardSnapshot? _snap;
   RetentionSnapshot? _retention;
+  OperationsSnapshot? _ops;
   String? _error;
   bool _loading = true;
 
@@ -43,10 +45,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       final retention = await ref
           .read(retentionServiceProvider)
           .snapshot(workspace: workspace, importHealth: health);
+      final ops = await ref
+          .read(operationsServiceProvider)
+          .snapshot(workspace: workspace, importHealth: health);
       if (!mounted) return;
       setState(() {
         _snap = snap;
         _retention = retention;
+        _ops = ops;
       });
     } catch (_) {
       if (!mounted) return;
@@ -103,20 +109,79 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     s.peakHours,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  if (snap.peakHours.isEmpty)
+                  if ((_ops?.peakHours.isEmpty ?? snap.peakHours.isEmpty))
                     Text(
-                      s.noPeakHours,
+                      _ops?.explanation ?? s.noPeakHours,
                       style: const TextStyle(color: GpColors.textSecondary),
                     )
                   else
-                    for (final p in snap.peakHours)
+                    for (final p
+                        in (_ops?.peakHours ?? const <PeakSlot>[]).take(8))
                       Text(
-                        '${p.hour.toString().padLeft(2, '0')}:00 — ${p.visits} ${s.visits} (${p.label})',
+                        '${OperationsService.weekdayName(p.weekday)} ${p.hour.toString().padLeft(2, '0')}:00 — ${p.visits} ${s.visits} · avg ${p.average.toStringAsFixed(1)} · p90 ${p.p90} (${p.label})',
                       ),
                 ],
               ),
             ),
           ),
+          if (_ops != null) ...[
+            Card(
+              child: ListTile(
+                title: Text(s.capacityUtilization),
+                subtitle: Text(_ops!.capacity.explanation),
+              ),
+            ),
+            if (_ops!.peakWindows.isNotEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(GpSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s.peakWindows,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      for (final w in _ops!.peakWindows.take(5))
+                        Text(
+                          '${OperationsService.weekdayName(w.weekday)} ${w.startHour.toString().padLeft(2, '0')}:00–${w.endHour.toString().padLeft(2, '0')}:00 · ${w.visits} ${s.visits} (${w.label})',
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(GpSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.locations,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    if (_ops!.locations.length < 2)
+                      Text(
+                        s.addAnotherLocation,
+                        style: const TextStyle(color: GpColors.textSecondary),
+                      ),
+                    for (final row in _ops!.locations)
+                      Text(
+                        row.reliable
+                            ? '${row.name}: ${row.visits} ${s.visits} · ${row.uniqueVisitors} unique · ${row.unmatched} unmatched'
+                            : '${row.name}: ${row.explanation}',
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                title: Text(s.dailySummary),
+                subtitle: Text(_ops!.daily.explanation),
+              ),
+            ),
+          ],
           if (_retention != null) ...[
             Card(
               child: ListTile(

@@ -10,6 +10,9 @@ import '../attendance/import_screen.dart';
 import 'app_update_flow.dart';
 import 'backup_settings_screen.dart';
 import 'gym_settings_screen.dart';
+import 'locations_screen.dart';
+import 'notification_settings_screen.dart';
+import 'reports_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -122,6 +125,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const ImportScreen()));
+          },
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.locations),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const LocationsScreen()));
+          },
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.exportReports),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ReportsScreen()));
+          },
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.notificationPrefs),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const NotificationSettingsScreen(),
+              ),
+            );
           },
         ),
         const Divider(),

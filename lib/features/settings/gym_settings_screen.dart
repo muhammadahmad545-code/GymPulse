@@ -27,6 +27,8 @@ class _GymSettingsScreenState extends ConsumerState<GymSettingsScreen> {
   final _wExpiry = TextEditingController(text: '20');
   final _wEngagement = TextEditingController(text: '15');
   final _wHistory = TextEditingController(text: '10');
+  final _capacity = TextEditingController();
+  final _peakThreshold = TextEditingController();
   String? _message;
 
   @override
@@ -49,6 +51,8 @@ class _GymSettingsScreenState extends ConsumerState<GymSettingsScreen> {
     _wExpiry.dispose();
     _wEngagement.dispose();
     _wHistory.dispose();
+    _capacity.dispose();
+    _peakThreshold.dispose();
     super.dispose();
   }
 
@@ -69,6 +73,9 @@ class _GymSettingsScreenState extends ConsumerState<GymSettingsScreen> {
       _wExpiry.text = '${weights.expiry}';
       _wEngagement.text = '${weights.engagement}';
       _wHistory.text = '${weights.history}';
+      _capacity.text = workspace.location.capacity?.toString() ?? '';
+      _peakThreshold.text =
+          workspace.settings.peakHighAttendance?.toString() ?? '';
     });
   }
 
@@ -87,6 +94,7 @@ class _GymSettingsScreenState extends ConsumerState<GymSettingsScreen> {
             inactivityHighRiskDays: int.tryParse(_high.text),
             inactivityCriticalDays: int.tryParse(_critical.text),
             trialDefaultDays: int.tryParse(_trialDays.text),
+            peakHighAttendance: int.tryParse(_peakThreshold.text),
             riskWeightsJson: RiskWeights(
               decline: int.tryParse(_wDecline.text) ?? 30,
               inactivity: int.tryParse(_wInactivity.text) ?? 25,
@@ -94,6 +102,12 @@ class _GymSettingsScreenState extends ConsumerState<GymSettingsScreen> {
               engagement: int.tryParse(_wEngagement.text) ?? 15,
               history: int.tryParse(_wHistory.text) ?? 10,
             ).toJson(),
+          );
+      await ref
+          .read(workspaceServiceProvider)
+          .updateLocationCapacity(
+            locationId: workspace.location.id,
+            capacity: int.tryParse(_capacity.text),
           );
       ref.read(workspaceRefreshProvider.notifier).state++;
       setState(() => _message = ref.read(appStringsProvider).saved);
@@ -113,6 +127,20 @@ class _GymSettingsScreenState extends ConsumerState<GymSettingsScreen> {
           TextField(
             controller: _phone,
             decoration: InputDecoration(labelText: s.gymPhoneOptional),
+          ),
+          const SizedBox(height: GpSpacing.md),
+          TextField(
+            controller: _capacity,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(labelText: s.capacityOptional),
+          ),
+          const SizedBox(height: GpSpacing.md),
+          TextField(
+            controller: _peakThreshold,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(labelText: s.peakHighAttendance),
           ),
           const SizedBox(height: GpSpacing.md),
           TextField(

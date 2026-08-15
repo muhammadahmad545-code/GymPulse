@@ -23,15 +23,117 @@ class WorkspaceService {
   final LocalLocationRepository _locations;
   final Uuid _uuid;
 
+  static const _activeLocationKey = 'active_location_id';
+
   Future<Workspace?> current() async {
     final orgs = await _organizations.list();
     if (orgs.isEmpty) return null;
     final org = orgs.first;
     final locs = await _locations.list(org.id);
     if (locs.isEmpty) return null;
-    final location = locs.first;
+    final selectedId = await _meta(_activeLocationKey);
+    final location = locs.cast<Location?>().firstWhere(
+      (l) => l?.id == selectedId,
+      orElse: () => locs.first,
+    )!;
     final settings = await _settingsFor(location.id);
     return Workspace(organization: org, location: location, settings: settings);
+  }
+
+  Future<List<Location>> listLocations() async {
+    final workspace = await current();
+    if (workspace == null) return const [];
+    return _locations.list(workspace.organization.id);
+  }
+
+  Future<Workspace> switchLocation(String locationId) async {
+    final workspace = await current();
+    if (workspace == null) {
+      throw AppException(
+        code: AppErrorCodes.validationInvalidField,
+        message: 'Set up a gym before switching locations.',
+      );
+    }
+    final location = await _locations.get(
+      organizationId: workspace.organization.id,
+      id: locationId,
+    );
+    if (location == null) {
+      throw AppException(
+        code: AppErrorCodes.validationInvalidField,
+        message: 'Location was not found in this organization.',
+      );
+    }
+    await _setMeta(_activeLocationKey, locationId);
+    return (await current())!;
+  }
+
+  Future<Workspace> addLocation({
+    required String name,
+    String? timezone,
+    int? capacity,
+  }) async {
+    final workspace = await current();
+    if (workspace == null) {
+      throw AppException(
+        code: AppErrorCodes.validationInvalidField,
+        message: 'Set up a gym before adding a location.',
+      );
+    }
+    final location = await _locations.create(
+      organizationId: workspace.organization.id,
+      name: name,
+      timezone: timezone?.trim().isNotEmpty == true
+          ? timezone!.trim()
+          : workspace.location.timezone,
+      countryCode: workspace.location.countryCode,
+      currencyCode: workspace.location.currencyCode,
+      capacity: capacity,
+    );
+    final now = DateTime.now().toUtc();
+    await _db
+        .into(_db.locationSettings)
+        .insert(
+          LocationSettingsCompanion.insert(
+            locationId: location.id,
+            updatedAt: now,
+          ),
+        );
+    await _seedTemplates(workspace.organization.id, location.id, now);
+    await _setMeta(_activeLocationKey, location.id);
+    return (await current())!;
+  }
+
+  Future<void> updateLocationCapacity({
+    required String locationId,
+    int? capacity,
+  }) async {
+    final workspace = await current();
+    if (workspace == null) return;
+    await _locations.update(
+      organizationId: workspace.organization.id,
+      id: locationId,
+      capacity: capacity,
+    );
+  }
+
+  Future<String?> _meta(String key) async {
+    final row = await (_db.select(
+      _db.appMetaEntries,
+    )..where((t) => t.key.equals(key))).getSingleOrNull();
+    return row?.value;
+  }
+
+  Future<void> _setMeta(String key, String value) async {
+    await _db
+        .into(_db.appMetaEntries)
+        .insertOnConflictUpdate(
+          AppMetaEntriesCompanion.insert(
+            key: key,
+            value: value,
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        );
   }
 
   Future<Workspace> setup({

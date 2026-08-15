@@ -9,6 +9,7 @@ import '../../data/repositories/local_attendance_repository.dart';
 import '../../data/repositories/local_member_repository.dart';
 import '../attendance/attendance_source.dart';
 import '../attendance/csv_import_adapter.dart';
+import '../attendance/json_import_adapter.dart';
 import '../models/workspace.dart';
 
 class ImportReport {
@@ -185,6 +186,32 @@ class AttendanceIngestService {
     final mock = MockAttendanceSource();
     await mock.connect();
     final events = await mock.syncSince(null);
+    final csv = StringBuffer()
+      ..writeln('external_event_id,external_member_id,occurred_at,event_type');
+    for (final e in events) {
+      csv.writeln(
+        '${e.externalEventId},${e.externalMemberId},${e.occurredAt.toIso8601String()},${e.eventType}',
+      );
+    }
+    return importCsv(workspace: workspace, csv: csv.toString());
+  }
+
+  Future<ImportReport> importJson({
+    required Workspace workspace,
+    required String json,
+  }) async {
+    final adapter = JsonImportAdapter();
+    late final List<AttendanceEvent> events;
+    try {
+      events = adapter.parse(json);
+    } catch (e) {
+      throw AppException(
+        code: AppErrorCodes.importFailed,
+        message:
+            'The JSON could not be read. Use an events array with external_member_id and occurred_at.',
+        cause: e,
+      );
+    }
     final csv = StringBuffer()
       ..writeln('external_event_id,external_member_id,occurred_at,event_type');
     for (final e in events) {
