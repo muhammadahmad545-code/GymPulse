@@ -5,6 +5,7 @@ import '../app/providers.dart';
 import '../core/theme/gp_theme.dart';
 import '../features/security/pin_setup_screen.dart';
 import '../features/security/unlock_screen.dart';
+import '../features/setup/org_setup_screen.dart';
 import '../features/shell/app_shell.dart';
 
 class GymPulseApp extends ConsumerStatefulWidget {
@@ -70,7 +71,14 @@ class _GymPulseAppState extends ConsumerState<GymPulseApp>
     } else if (!unlocked) {
       home = const UnlockScreen();
     } else {
-      home = const AppShell();
+      final workspace = ref.watch(workspaceProvider);
+      home = workspace.when(
+        data: (value) =>
+            value == null ? const OrgSetupScreen() : const AppShell(),
+        loading: () =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
+        error: (_, __) => const OrgSetupScreen(),
+      );
     }
 
     return MaterialApp(

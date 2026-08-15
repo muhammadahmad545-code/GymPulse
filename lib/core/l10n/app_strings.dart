@@ -62,9 +62,81 @@ class AppStrings {
   String get interval14 => 'Every 14 days';
   String get interval30 => 'Every 30 days';
 
-  String get phase0HomeTitle => 'Foundation ready';
-  String get phase0HomeBody =>
-      'Phase 0 is installed. Core screens and local security are online. Membership workflows arrive in Phase 1.';
+  String get setupGymTitle => 'Set up your gym';
+  String get setupGymSubtitle =>
+      'Country, timezone, and currency stay on this phone and can be changed later.';
+  String get gymName => 'Gym name';
+  String get locationName => 'Location name';
+  String get country => 'Country';
+  String get timezone => 'Timezone';
+  String get currency => 'Currency';
+  String get gymPhoneOptional => 'Gym phone (optional)';
+  String get capacityOptional => 'Capacity (optional)';
+  String get gymSettings => 'Gym settings';
+  String get saved => 'Saved.';
+  String get staleImportHours => 'Hours before attendance is stale';
+  String get inactivityMonitor => 'Inactivity monitor (days)';
+  String get inactivityFollowUp => 'Inactivity follow-up (days)';
+  String get inactivityHighRisk => 'Inactivity high risk (days)';
+  String get inactivityCritical => 'Inactivity critical (days)';
+
+  String get needsAttention => 'Needs attention today';
+  String get noAttention => 'No expiry or inactivity actions right now.';
+  String get peakHours => 'Peak hours';
+  String get noPeakHours => 'Not enough attendance history to show peak hours.';
+  String get visits => 'visits';
+  String get activeMembers => 'Active members';
+  String get openActions => 'Open actions';
+  String get unmatched => 'Unmatched';
+  String get healthScore => 'Health score';
+  String get attendance => 'Attendance';
+  String get lastImport => 'Last import';
+  String get trials => 'Trials';
+  String get cancellations => 'Cancellations';
+  String get phase2Analytics => 'basic capture only in this phase';
+
+  String get searchMembers => 'Search members';
+  String get noMembers => 'No members yet. Add a member to get started.';
+  String get addMember => 'Add member';
+  String get editMember => 'Edit member';
+  String get firstName => 'First name';
+  String get lastName => 'Last name';
+  String get phoneOptional => 'Phone (optional)';
+  String get emailOptional => 'Email (optional)';
+  String get externalMemberId => 'External member ID';
+  String get status => 'Status';
+  String get membership => 'Membership';
+  String get noMembership => 'No membership on file.';
+  String get addMembership => 'Add 30-day membership';
+  String get renewMembership => 'Renew 30 days (explicit)';
+  String get contactMember => 'Contact member';
+  String get whatsapp => 'WhatsApp';
+  String get call => 'Call';
+  String get copyMessage => 'Copy message';
+  String get noActions => 'No open follow-ups.';
+  String get priority => 'Priority';
+  String get markContacted => 'Mark contacted';
+  String get snooze => 'Snooze';
+  String get resolve => 'Resolve';
+
+  String get importAttendance => 'Attendance import';
+  String get importCsv => 'Import attendance CSV';
+  String get loadMockAttendance => 'Load mock attendance (test only)';
+  String get csvFormatHelp =>
+      'CSV columns: external_event_id, external_member_id, occurred_at, event_type. Missing members stay unmatched and are never discarded.';
+  String get imported => 'Imported';
+  String get skipped => 'Skipped';
+  String get errors => 'Errors';
+  String get attendanceUnavailable =>
+      'Attendance is unavailable. This is not shown as zero visits.';
+  String get exportCsv => 'Export CSV (not encrypted)';
+  String get importMembersCsv => 'Import members CSV';
+  String get csvNotBackup =>
+      'CSV is for interoperability only. It is not an encrypted backup.';
+
+  String expiresInDays(int days) =>
+      days < 0 ? 'Expired ${-days} day(s) ago' : 'Expires in $days day(s)';
+  String inactiveForDays(int days) => 'No visit for $days day(s)';
 
   String get retry => 'Retry';
   String get cancel => 'Cancel';

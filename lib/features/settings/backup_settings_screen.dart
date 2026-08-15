@@ -134,6 +134,44 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
     }
   }
 
+  Future<void> _exportMembers() async {
+    try {
+      final workspace = await ref.read(workspaceProvider.future);
+      if (workspace == null) return;
+      final csv = await ref
+          .read(csvInteropServiceProvider)
+          .exportMembers(workspace);
+      await SharePlus.instance.share(ShareParams(text: csv));
+    } on AppException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = ref.read(appStringsProvider).somethingWentWrong);
+    }
+  }
+
+  Future<void> _importMembers() async {
+    try {
+      final picked = await FilePicker.platform.pickFiles(type: FileType.any);
+      final path = picked?.files.single.path;
+      if (path == null) return;
+      final workspace = await ref.read(workspaceProvider.future);
+      if (workspace == null) return;
+      final created = await ref
+          .read(csvInteropServiceProvider)
+          .importMembers(
+            workspace: workspace,
+            csv: await File(path).readAsString(),
+          );
+      setState(
+        () => _info = '${ref.read(appStringsProvider).imported}: $created',
+      );
+    } on AppException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = ref.read(appStringsProvider).somethingWentWrong);
+    }
+  }
+
   Future<void> _saveReminder() async {
     try {
       await ref
@@ -233,6 +271,18 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
           OutlinedButton(
             onPressed: _busy ? null : _restore,
             child: Text(s.restoreBackup),
+          ),
+          const Divider(),
+          Text(s.exportCsv, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: GpSpacing.sm),
+          Text(s.csvNotBackup, style: const TextStyle(color: GpColors.warning)),
+          TextButton(
+            onPressed: _busy ? null : _exportMembers,
+            child: Text(s.exportCsv),
+          ),
+          TextButton(
+            onPressed: _busy ? null : _importMembers,
+            child: Text(s.importMembersCsv),
           ),
           if (_error != null) ...[
             const SizedBox(height: GpSpacing.md),

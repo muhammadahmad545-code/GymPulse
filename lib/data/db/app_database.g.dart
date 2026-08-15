@@ -4793,6 +4793,18 @@ class $AttendanceEventsTable extends AttendanceEvents
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _matchStatusMeta = const VerificationMeta(
+    'matchStatus',
+  );
+  @override
+  late final GeneratedColumn<String> matchStatus = GeneratedColumn<String>(
+    'match_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('unmatched'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4807,6 +4819,7 @@ class $AttendanceEventsTable extends AttendanceEvents
     externalEventId,
     rawPayloadJson,
     ingestedAt,
+    matchStatus,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4925,6 +4938,15 @@ class $AttendanceEventsTable extends AttendanceEvents
     } else if (isInserting) {
       context.missing(_ingestedAtMeta);
     }
+    if (data.containsKey('match_status')) {
+      context.handle(
+        _matchStatusMeta,
+        matchStatus.isAcceptableOrUnknown(
+          data['match_status']!,
+          _matchStatusMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -4982,6 +5004,10 @@ class $AttendanceEventsTable extends AttendanceEvents
         DriftSqlType.dateTime,
         data['${effectivePrefix}ingested_at'],
       )!,
+      matchStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_status'],
+      )!,
     );
   }
 
@@ -5004,6 +5030,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
   final String? externalEventId;
   final String? rawPayloadJson;
   final DateTime ingestedAt;
+  final String matchStatus;
   const AttendanceEvent({
     required this.id,
     required this.organizationId,
@@ -5017,6 +5044,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     this.externalEventId,
     this.rawPayloadJson,
     required this.ingestedAt,
+    required this.matchStatus,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5039,6 +5067,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
       map['raw_payload_json'] = Variable<String>(rawPayloadJson);
     }
     map['ingested_at'] = Variable<DateTime>(ingestedAt);
+    map['match_status'] = Variable<String>(matchStatus);
     return map;
   }
 
@@ -5062,6 +5091,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
           ? const Value.absent()
           : Value(rawPayloadJson),
       ingestedAt: Value(ingestedAt),
+      matchStatus: Value(matchStatus),
     );
   }
 
@@ -5083,6 +5113,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
       externalEventId: serializer.fromJson<String?>(json['externalEventId']),
       rawPayloadJson: serializer.fromJson<String?>(json['rawPayloadJson']),
       ingestedAt: serializer.fromJson<DateTime>(json['ingestedAt']),
+      matchStatus: serializer.fromJson<String>(json['matchStatus']),
     );
   }
   @override
@@ -5101,6 +5132,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
       'externalEventId': serializer.toJson<String?>(externalEventId),
       'rawPayloadJson': serializer.toJson<String?>(rawPayloadJson),
       'ingestedAt': serializer.toJson<DateTime>(ingestedAt),
+      'matchStatus': serializer.toJson<String>(matchStatus),
     };
   }
 
@@ -5117,6 +5149,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     Value<String?> externalEventId = const Value.absent(),
     Value<String?> rawPayloadJson = const Value.absent(),
     DateTime? ingestedAt,
+    String? matchStatus,
   }) => AttendanceEvent(
     id: id ?? this.id,
     organizationId: organizationId ?? this.organizationId,
@@ -5134,6 +5167,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
         ? rawPayloadJson.value
         : this.rawPayloadJson,
     ingestedAt: ingestedAt ?? this.ingestedAt,
+    matchStatus: matchStatus ?? this.matchStatus,
   );
   AttendanceEvent copyWithCompanion(AttendanceEventsCompanion data) {
     return AttendanceEvent(
@@ -5165,6 +5199,9 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
       ingestedAt: data.ingestedAt.present
           ? data.ingestedAt.value
           : this.ingestedAt,
+      matchStatus: data.matchStatus.present
+          ? data.matchStatus.value
+          : this.matchStatus,
     );
   }
 
@@ -5182,7 +5219,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
           ..write('eventType: $eventType, ')
           ..write('externalEventId: $externalEventId, ')
           ..write('rawPayloadJson: $rawPayloadJson, ')
-          ..write('ingestedAt: $ingestedAt')
+          ..write('ingestedAt: $ingestedAt, ')
+          ..write('matchStatus: $matchStatus')
           ..write(')'))
         .toString();
   }
@@ -5201,6 +5239,7 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     externalEventId,
     rawPayloadJson,
     ingestedAt,
+    matchStatus,
   );
   @override
   bool operator ==(Object other) =>
@@ -5217,7 +5256,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
           other.eventType == this.eventType &&
           other.externalEventId == this.externalEventId &&
           other.rawPayloadJson == this.rawPayloadJson &&
-          other.ingestedAt == this.ingestedAt);
+          other.ingestedAt == this.ingestedAt &&
+          other.matchStatus == this.matchStatus);
 }
 
 class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
@@ -5233,6 +5273,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
   final Value<String?> externalEventId;
   final Value<String?> rawPayloadJson;
   final Value<DateTime> ingestedAt;
+  final Value<String> matchStatus;
   final Value<int> rowid;
   const AttendanceEventsCompanion({
     this.id = const Value.absent(),
@@ -5247,6 +5288,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     this.externalEventId = const Value.absent(),
     this.rawPayloadJson = const Value.absent(),
     this.ingestedAt = const Value.absent(),
+    this.matchStatus = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AttendanceEventsCompanion.insert({
@@ -5262,6 +5304,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     this.externalEventId = const Value.absent(),
     this.rawPayloadJson = const Value.absent(),
     required DateTime ingestedAt,
+    this.matchStatus = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        organizationId = Value(organizationId),
@@ -5285,6 +5328,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     Expression<String>? externalEventId,
     Expression<String>? rawPayloadJson,
     Expression<DateTime>? ingestedAt,
+    Expression<String>? matchStatus,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5300,6 +5344,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
       if (externalEventId != null) 'external_event_id': externalEventId,
       if (rawPayloadJson != null) 'raw_payload_json': rawPayloadJson,
       if (ingestedAt != null) 'ingested_at': ingestedAt,
+      if (matchStatus != null) 'match_status': matchStatus,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5317,6 +5362,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     Value<String?>? externalEventId,
     Value<String?>? rawPayloadJson,
     Value<DateTime>? ingestedAt,
+    Value<String>? matchStatus,
     Value<int>? rowid,
   }) {
     return AttendanceEventsCompanion(
@@ -5332,6 +5378,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
       externalEventId: externalEventId ?? this.externalEventId,
       rawPayloadJson: rawPayloadJson ?? this.rawPayloadJson,
       ingestedAt: ingestedAt ?? this.ingestedAt,
+      matchStatus: matchStatus ?? this.matchStatus,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5375,6 +5422,9 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     if (ingestedAt.present) {
       map['ingested_at'] = Variable<DateTime>(ingestedAt.value);
     }
+    if (matchStatus.present) {
+      map['match_status'] = Variable<String>(matchStatus.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5396,6 +5446,7 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
           ..write('externalEventId: $externalEventId, ')
           ..write('rawPayloadJson: $rawPayloadJson, ')
           ..write('ingestedAt: $ingestedAt, ')
+          ..write('matchStatus: $matchStatus, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -13568,6 +13619,676 @@ class BackupReminderSettingsCompanion
   }
 }
 
+class $LocationSettingsTable extends LocationSettings
+    with TableInfo<$LocationSettingsTable, LocationSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocationSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _locationIdMeta = const VerificationMeta(
+    'locationId',
+  );
+  @override
+  late final GeneratedColumn<String> locationId = GeneratedColumn<String>(
+    'location_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _inactivityMonitorDaysMeta =
+      const VerificationMeta('inactivityMonitorDays');
+  @override
+  late final GeneratedColumn<int> inactivityMonitorDays = GeneratedColumn<int>(
+    'inactivity_monitor_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(7),
+  );
+  static const VerificationMeta _inactivityFollowUpDaysMeta =
+      const VerificationMeta('inactivityFollowUpDays');
+  @override
+  late final GeneratedColumn<int> inactivityFollowUpDays = GeneratedColumn<int>(
+    'inactivity_follow_up_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(14),
+  );
+  static const VerificationMeta _inactivityHighRiskDaysMeta =
+      const VerificationMeta('inactivityHighRiskDays');
+  @override
+  late final GeneratedColumn<int> inactivityHighRiskDays = GeneratedColumn<int>(
+    'inactivity_high_risk_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(21),
+  );
+  static const VerificationMeta _inactivityCriticalDaysMeta =
+      const VerificationMeta('inactivityCriticalDays');
+  @override
+  late final GeneratedColumn<int> inactivityCriticalDays = GeneratedColumn<int>(
+    'inactivity_critical_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(30),
+  );
+  static const VerificationMeta _staleImportHoursMeta = const VerificationMeta(
+    'staleImportHours',
+  );
+  @override
+  late final GeneratedColumn<int> staleImportHours = GeneratedColumn<int>(
+    'stale_import_hours',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(24),
+  );
+  static const VerificationMeta _gymPhoneMeta = const VerificationMeta(
+    'gymPhone',
+  );
+  @override
+  late final GeneratedColumn<String> gymPhone = GeneratedColumn<String>(
+    'gym_phone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _peakHighAttendanceMeta =
+      const VerificationMeta('peakHighAttendance');
+  @override
+  late final GeneratedColumn<int> peakHighAttendance = GeneratedColumn<int>(
+    'peak_high_attendance',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closureDatesJsonMeta = const VerificationMeta(
+    'closureDatesJson',
+  );
+  @override
+  late final GeneratedColumn<String> closureDatesJson = GeneratedColumn<String>(
+    'closure_dates_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    locationId,
+    inactivityMonitorDays,
+    inactivityFollowUpDays,
+    inactivityHighRiskDays,
+    inactivityCriticalDays,
+    staleImportHours,
+    gymPhone,
+    peakHighAttendance,
+    closureDatesJson,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'location_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocationSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('location_id')) {
+      context.handle(
+        _locationIdMeta,
+        locationId.isAcceptableOrUnknown(data['location_id']!, _locationIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_locationIdMeta);
+    }
+    if (data.containsKey('inactivity_monitor_days')) {
+      context.handle(
+        _inactivityMonitorDaysMeta,
+        inactivityMonitorDays.isAcceptableOrUnknown(
+          data['inactivity_monitor_days']!,
+          _inactivityMonitorDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inactivity_follow_up_days')) {
+      context.handle(
+        _inactivityFollowUpDaysMeta,
+        inactivityFollowUpDays.isAcceptableOrUnknown(
+          data['inactivity_follow_up_days']!,
+          _inactivityFollowUpDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inactivity_high_risk_days')) {
+      context.handle(
+        _inactivityHighRiskDaysMeta,
+        inactivityHighRiskDays.isAcceptableOrUnknown(
+          data['inactivity_high_risk_days']!,
+          _inactivityHighRiskDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inactivity_critical_days')) {
+      context.handle(
+        _inactivityCriticalDaysMeta,
+        inactivityCriticalDays.isAcceptableOrUnknown(
+          data['inactivity_critical_days']!,
+          _inactivityCriticalDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('stale_import_hours')) {
+      context.handle(
+        _staleImportHoursMeta,
+        staleImportHours.isAcceptableOrUnknown(
+          data['stale_import_hours']!,
+          _staleImportHoursMeta,
+        ),
+      );
+    }
+    if (data.containsKey('gym_phone')) {
+      context.handle(
+        _gymPhoneMeta,
+        gymPhone.isAcceptableOrUnknown(data['gym_phone']!, _gymPhoneMeta),
+      );
+    }
+    if (data.containsKey('peak_high_attendance')) {
+      context.handle(
+        _peakHighAttendanceMeta,
+        peakHighAttendance.isAcceptableOrUnknown(
+          data['peak_high_attendance']!,
+          _peakHighAttendanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('closure_dates_json')) {
+      context.handle(
+        _closureDatesJsonMeta,
+        closureDatesJson.isAcceptableOrUnknown(
+          data['closure_dates_json']!,
+          _closureDatesJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {locationId};
+  @override
+  LocationSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocationSetting(
+      locationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location_id'],
+      )!,
+      inactivityMonitorDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}inactivity_monitor_days'],
+      )!,
+      inactivityFollowUpDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}inactivity_follow_up_days'],
+      )!,
+      inactivityHighRiskDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}inactivity_high_risk_days'],
+      )!,
+      inactivityCriticalDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}inactivity_critical_days'],
+      )!,
+      staleImportHours: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}stale_import_hours'],
+      )!,
+      gymPhone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gym_phone'],
+      ),
+      peakHighAttendance: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}peak_high_attendance'],
+      ),
+      closureDatesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closure_dates_json'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LocationSettingsTable createAlias(String alias) {
+    return $LocationSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class LocationSetting extends DataClass implements Insertable<LocationSetting> {
+  final String locationId;
+  final int inactivityMonitorDays;
+  final int inactivityFollowUpDays;
+  final int inactivityHighRiskDays;
+  final int inactivityCriticalDays;
+  final int staleImportHours;
+  final String? gymPhone;
+  final int? peakHighAttendance;
+  final String? closureDatesJson;
+  final DateTime updatedAt;
+  const LocationSetting({
+    required this.locationId,
+    required this.inactivityMonitorDays,
+    required this.inactivityFollowUpDays,
+    required this.inactivityHighRiskDays,
+    required this.inactivityCriticalDays,
+    required this.staleImportHours,
+    this.gymPhone,
+    this.peakHighAttendance,
+    this.closureDatesJson,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['location_id'] = Variable<String>(locationId);
+    map['inactivity_monitor_days'] = Variable<int>(inactivityMonitorDays);
+    map['inactivity_follow_up_days'] = Variable<int>(inactivityFollowUpDays);
+    map['inactivity_high_risk_days'] = Variable<int>(inactivityHighRiskDays);
+    map['inactivity_critical_days'] = Variable<int>(inactivityCriticalDays);
+    map['stale_import_hours'] = Variable<int>(staleImportHours);
+    if (!nullToAbsent || gymPhone != null) {
+      map['gym_phone'] = Variable<String>(gymPhone);
+    }
+    if (!nullToAbsent || peakHighAttendance != null) {
+      map['peak_high_attendance'] = Variable<int>(peakHighAttendance);
+    }
+    if (!nullToAbsent || closureDatesJson != null) {
+      map['closure_dates_json'] = Variable<String>(closureDatesJson);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  LocationSettingsCompanion toCompanion(bool nullToAbsent) {
+    return LocationSettingsCompanion(
+      locationId: Value(locationId),
+      inactivityMonitorDays: Value(inactivityMonitorDays),
+      inactivityFollowUpDays: Value(inactivityFollowUpDays),
+      inactivityHighRiskDays: Value(inactivityHighRiskDays),
+      inactivityCriticalDays: Value(inactivityCriticalDays),
+      staleImportHours: Value(staleImportHours),
+      gymPhone: gymPhone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gymPhone),
+      peakHighAttendance: peakHighAttendance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(peakHighAttendance),
+      closureDatesJson: closureDatesJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closureDatesJson),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory LocationSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocationSetting(
+      locationId: serializer.fromJson<String>(json['locationId']),
+      inactivityMonitorDays: serializer.fromJson<int>(
+        json['inactivityMonitorDays'],
+      ),
+      inactivityFollowUpDays: serializer.fromJson<int>(
+        json['inactivityFollowUpDays'],
+      ),
+      inactivityHighRiskDays: serializer.fromJson<int>(
+        json['inactivityHighRiskDays'],
+      ),
+      inactivityCriticalDays: serializer.fromJson<int>(
+        json['inactivityCriticalDays'],
+      ),
+      staleImportHours: serializer.fromJson<int>(json['staleImportHours']),
+      gymPhone: serializer.fromJson<String?>(json['gymPhone']),
+      peakHighAttendance: serializer.fromJson<int?>(json['peakHighAttendance']),
+      closureDatesJson: serializer.fromJson<String?>(json['closureDatesJson']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'locationId': serializer.toJson<String>(locationId),
+      'inactivityMonitorDays': serializer.toJson<int>(inactivityMonitorDays),
+      'inactivityFollowUpDays': serializer.toJson<int>(inactivityFollowUpDays),
+      'inactivityHighRiskDays': serializer.toJson<int>(inactivityHighRiskDays),
+      'inactivityCriticalDays': serializer.toJson<int>(inactivityCriticalDays),
+      'staleImportHours': serializer.toJson<int>(staleImportHours),
+      'gymPhone': serializer.toJson<String?>(gymPhone),
+      'peakHighAttendance': serializer.toJson<int?>(peakHighAttendance),
+      'closureDatesJson': serializer.toJson<String?>(closureDatesJson),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  LocationSetting copyWith({
+    String? locationId,
+    int? inactivityMonitorDays,
+    int? inactivityFollowUpDays,
+    int? inactivityHighRiskDays,
+    int? inactivityCriticalDays,
+    int? staleImportHours,
+    Value<String?> gymPhone = const Value.absent(),
+    Value<int?> peakHighAttendance = const Value.absent(),
+    Value<String?> closureDatesJson = const Value.absent(),
+    DateTime? updatedAt,
+  }) => LocationSetting(
+    locationId: locationId ?? this.locationId,
+    inactivityMonitorDays: inactivityMonitorDays ?? this.inactivityMonitorDays,
+    inactivityFollowUpDays:
+        inactivityFollowUpDays ?? this.inactivityFollowUpDays,
+    inactivityHighRiskDays:
+        inactivityHighRiskDays ?? this.inactivityHighRiskDays,
+    inactivityCriticalDays:
+        inactivityCriticalDays ?? this.inactivityCriticalDays,
+    staleImportHours: staleImportHours ?? this.staleImportHours,
+    gymPhone: gymPhone.present ? gymPhone.value : this.gymPhone,
+    peakHighAttendance: peakHighAttendance.present
+        ? peakHighAttendance.value
+        : this.peakHighAttendance,
+    closureDatesJson: closureDatesJson.present
+        ? closureDatesJson.value
+        : this.closureDatesJson,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  LocationSetting copyWithCompanion(LocationSettingsCompanion data) {
+    return LocationSetting(
+      locationId: data.locationId.present
+          ? data.locationId.value
+          : this.locationId,
+      inactivityMonitorDays: data.inactivityMonitorDays.present
+          ? data.inactivityMonitorDays.value
+          : this.inactivityMonitorDays,
+      inactivityFollowUpDays: data.inactivityFollowUpDays.present
+          ? data.inactivityFollowUpDays.value
+          : this.inactivityFollowUpDays,
+      inactivityHighRiskDays: data.inactivityHighRiskDays.present
+          ? data.inactivityHighRiskDays.value
+          : this.inactivityHighRiskDays,
+      inactivityCriticalDays: data.inactivityCriticalDays.present
+          ? data.inactivityCriticalDays.value
+          : this.inactivityCriticalDays,
+      staleImportHours: data.staleImportHours.present
+          ? data.staleImportHours.value
+          : this.staleImportHours,
+      gymPhone: data.gymPhone.present ? data.gymPhone.value : this.gymPhone,
+      peakHighAttendance: data.peakHighAttendance.present
+          ? data.peakHighAttendance.value
+          : this.peakHighAttendance,
+      closureDatesJson: data.closureDatesJson.present
+          ? data.closureDatesJson.value
+          : this.closureDatesJson,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocationSetting(')
+          ..write('locationId: $locationId, ')
+          ..write('inactivityMonitorDays: $inactivityMonitorDays, ')
+          ..write('inactivityFollowUpDays: $inactivityFollowUpDays, ')
+          ..write('inactivityHighRiskDays: $inactivityHighRiskDays, ')
+          ..write('inactivityCriticalDays: $inactivityCriticalDays, ')
+          ..write('staleImportHours: $staleImportHours, ')
+          ..write('gymPhone: $gymPhone, ')
+          ..write('peakHighAttendance: $peakHighAttendance, ')
+          ..write('closureDatesJson: $closureDatesJson, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    locationId,
+    inactivityMonitorDays,
+    inactivityFollowUpDays,
+    inactivityHighRiskDays,
+    inactivityCriticalDays,
+    staleImportHours,
+    gymPhone,
+    peakHighAttendance,
+    closureDatesJson,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocationSetting &&
+          other.locationId == this.locationId &&
+          other.inactivityMonitorDays == this.inactivityMonitorDays &&
+          other.inactivityFollowUpDays == this.inactivityFollowUpDays &&
+          other.inactivityHighRiskDays == this.inactivityHighRiskDays &&
+          other.inactivityCriticalDays == this.inactivityCriticalDays &&
+          other.staleImportHours == this.staleImportHours &&
+          other.gymPhone == this.gymPhone &&
+          other.peakHighAttendance == this.peakHighAttendance &&
+          other.closureDatesJson == this.closureDatesJson &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
+  final Value<String> locationId;
+  final Value<int> inactivityMonitorDays;
+  final Value<int> inactivityFollowUpDays;
+  final Value<int> inactivityHighRiskDays;
+  final Value<int> inactivityCriticalDays;
+  final Value<int> staleImportHours;
+  final Value<String?> gymPhone;
+  final Value<int?> peakHighAttendance;
+  final Value<String?> closureDatesJson;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const LocationSettingsCompanion({
+    this.locationId = const Value.absent(),
+    this.inactivityMonitorDays = const Value.absent(),
+    this.inactivityFollowUpDays = const Value.absent(),
+    this.inactivityHighRiskDays = const Value.absent(),
+    this.inactivityCriticalDays = const Value.absent(),
+    this.staleImportHours = const Value.absent(),
+    this.gymPhone = const Value.absent(),
+    this.peakHighAttendance = const Value.absent(),
+    this.closureDatesJson = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocationSettingsCompanion.insert({
+    required String locationId,
+    this.inactivityMonitorDays = const Value.absent(),
+    this.inactivityFollowUpDays = const Value.absent(),
+    this.inactivityHighRiskDays = const Value.absent(),
+    this.inactivityCriticalDays = const Value.absent(),
+    this.staleImportHours = const Value.absent(),
+    this.gymPhone = const Value.absent(),
+    this.peakHighAttendance = const Value.absent(),
+    this.closureDatesJson = const Value.absent(),
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : locationId = Value(locationId),
+       updatedAt = Value(updatedAt);
+  static Insertable<LocationSetting> custom({
+    Expression<String>? locationId,
+    Expression<int>? inactivityMonitorDays,
+    Expression<int>? inactivityFollowUpDays,
+    Expression<int>? inactivityHighRiskDays,
+    Expression<int>? inactivityCriticalDays,
+    Expression<int>? staleImportHours,
+    Expression<String>? gymPhone,
+    Expression<int>? peakHighAttendance,
+    Expression<String>? closureDatesJson,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (locationId != null) 'location_id': locationId,
+      if (inactivityMonitorDays != null)
+        'inactivity_monitor_days': inactivityMonitorDays,
+      if (inactivityFollowUpDays != null)
+        'inactivity_follow_up_days': inactivityFollowUpDays,
+      if (inactivityHighRiskDays != null)
+        'inactivity_high_risk_days': inactivityHighRiskDays,
+      if (inactivityCriticalDays != null)
+        'inactivity_critical_days': inactivityCriticalDays,
+      if (staleImportHours != null) 'stale_import_hours': staleImportHours,
+      if (gymPhone != null) 'gym_phone': gymPhone,
+      if (peakHighAttendance != null)
+        'peak_high_attendance': peakHighAttendance,
+      if (closureDatesJson != null) 'closure_dates_json': closureDatesJson,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocationSettingsCompanion copyWith({
+    Value<String>? locationId,
+    Value<int>? inactivityMonitorDays,
+    Value<int>? inactivityFollowUpDays,
+    Value<int>? inactivityHighRiskDays,
+    Value<int>? inactivityCriticalDays,
+    Value<int>? staleImportHours,
+    Value<String?>? gymPhone,
+    Value<int?>? peakHighAttendance,
+    Value<String?>? closureDatesJson,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return LocationSettingsCompanion(
+      locationId: locationId ?? this.locationId,
+      inactivityMonitorDays:
+          inactivityMonitorDays ?? this.inactivityMonitorDays,
+      inactivityFollowUpDays:
+          inactivityFollowUpDays ?? this.inactivityFollowUpDays,
+      inactivityHighRiskDays:
+          inactivityHighRiskDays ?? this.inactivityHighRiskDays,
+      inactivityCriticalDays:
+          inactivityCriticalDays ?? this.inactivityCriticalDays,
+      staleImportHours: staleImportHours ?? this.staleImportHours,
+      gymPhone: gymPhone ?? this.gymPhone,
+      peakHighAttendance: peakHighAttendance ?? this.peakHighAttendance,
+      closureDatesJson: closureDatesJson ?? this.closureDatesJson,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (locationId.present) {
+      map['location_id'] = Variable<String>(locationId.value);
+    }
+    if (inactivityMonitorDays.present) {
+      map['inactivity_monitor_days'] = Variable<int>(
+        inactivityMonitorDays.value,
+      );
+    }
+    if (inactivityFollowUpDays.present) {
+      map['inactivity_follow_up_days'] = Variable<int>(
+        inactivityFollowUpDays.value,
+      );
+    }
+    if (inactivityHighRiskDays.present) {
+      map['inactivity_high_risk_days'] = Variable<int>(
+        inactivityHighRiskDays.value,
+      );
+    }
+    if (inactivityCriticalDays.present) {
+      map['inactivity_critical_days'] = Variable<int>(
+        inactivityCriticalDays.value,
+      );
+    }
+    if (staleImportHours.present) {
+      map['stale_import_hours'] = Variable<int>(staleImportHours.value);
+    }
+    if (gymPhone.present) {
+      map['gym_phone'] = Variable<String>(gymPhone.value);
+    }
+    if (peakHighAttendance.present) {
+      map['peak_high_attendance'] = Variable<int>(peakHighAttendance.value);
+    }
+    if (closureDatesJson.present) {
+      map['closure_dates_json'] = Variable<String>(closureDatesJson.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocationSettingsCompanion(')
+          ..write('locationId: $locationId, ')
+          ..write('inactivityMonitorDays: $inactivityMonitorDays, ')
+          ..write('inactivityFollowUpDays: $inactivityFollowUpDays, ')
+          ..write('inactivityHighRiskDays: $inactivityHighRiskDays, ')
+          ..write('inactivityCriticalDays: $inactivityCriticalDays, ')
+          ..write('staleImportHours: $staleImportHours, ')
+          ..write('gymPhone: $gymPhone, ')
+          ..write('peakHighAttendance: $peakHighAttendance, ')
+          ..write('closureDatesJson: $closureDatesJson, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -13610,6 +14331,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BackupRunsTable backupRuns = $BackupRunsTable(this);
   late final $BackupReminderSettingsTable backupReminderSettings =
       $BackupReminderSettingsTable(this);
+  late final $LocationSettingsTable locationSettings = $LocationSettingsTable(
+    this,
+  );
   late final Index membersOrgExternalUidx = Index(
     'members_org_external_uidx',
     'CREATE UNIQUE INDEX members_org_external_uidx ON members (organization_id, external_member_id)',
@@ -13655,6 +14379,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     securityStates,
     backupRuns,
     backupReminderSettings,
+    locationSettings,
     membersOrgExternalUidx,
     membersOrgLocationIdx,
     attendanceSourceEventUidx,
@@ -16054,6 +16779,7 @@ typedef $$AttendanceEventsTableCreateCompanionBuilder =
       Value<String?> externalEventId,
       Value<String?> rawPayloadJson,
       required DateTime ingestedAt,
+      Value<String> matchStatus,
       Value<int> rowid,
     });
 typedef $$AttendanceEventsTableUpdateCompanionBuilder =
@@ -16070,6 +16796,7 @@ typedef $$AttendanceEventsTableUpdateCompanionBuilder =
       Value<String?> externalEventId,
       Value<String?> rawPayloadJson,
       Value<DateTime> ingestedAt,
+      Value<String> matchStatus,
       Value<int> rowid,
     });
 
@@ -16139,6 +16866,11 @@ class $$AttendanceEventsTableFilterComposer
 
   ColumnFilters<DateTime> get ingestedAt => $composableBuilder(
     column: $table.ingestedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchStatus => $composableBuilder(
+    column: $table.matchStatus,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -16211,6 +16943,11 @@ class $$AttendanceEventsTableOrderingComposer
     column: $table.ingestedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get matchStatus => $composableBuilder(
+    column: $table.matchStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AttendanceEventsTableAnnotationComposer
@@ -16273,6 +17010,11 @@ class $$AttendanceEventsTableAnnotationComposer
     column: $table.ingestedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get matchStatus => $composableBuilder(
+    column: $table.matchStatus,
+    builder: (column) => column,
+  );
 }
 
 class $$AttendanceEventsTableTableManager
@@ -16324,6 +17066,7 @@ class $$AttendanceEventsTableTableManager
                 Value<String?> externalEventId = const Value.absent(),
                 Value<String?> rawPayloadJson = const Value.absent(),
                 Value<DateTime> ingestedAt = const Value.absent(),
+                Value<String> matchStatus = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AttendanceEventsCompanion(
                 id: id,
@@ -16338,6 +17081,7 @@ class $$AttendanceEventsTableTableManager
                 externalEventId: externalEventId,
                 rawPayloadJson: rawPayloadJson,
                 ingestedAt: ingestedAt,
+                matchStatus: matchStatus,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -16354,6 +17098,7 @@ class $$AttendanceEventsTableTableManager
                 Value<String?> externalEventId = const Value.absent(),
                 Value<String?> rawPayloadJson = const Value.absent(),
                 required DateTime ingestedAt,
+                Value<String> matchStatus = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AttendanceEventsCompanion.insert(
                 id: id,
@@ -16368,6 +17113,7 @@ class $$AttendanceEventsTableTableManager
                 externalEventId: externalEventId,
                 rawPayloadJson: rawPayloadJson,
                 ingestedAt: ingestedAt,
+                matchStatus: matchStatus,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -20472,6 +21218,323 @@ typedef $$BackupReminderSettingsTableProcessedTableManager =
       BackupReminderSetting,
       PrefetchHooks Function()
     >;
+typedef $$LocationSettingsTableCreateCompanionBuilder =
+    LocationSettingsCompanion Function({
+      required String locationId,
+      Value<int> inactivityMonitorDays,
+      Value<int> inactivityFollowUpDays,
+      Value<int> inactivityHighRiskDays,
+      Value<int> inactivityCriticalDays,
+      Value<int> staleImportHours,
+      Value<String?> gymPhone,
+      Value<int?> peakHighAttendance,
+      Value<String?> closureDatesJson,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LocationSettingsTableUpdateCompanionBuilder =
+    LocationSettingsCompanion Function({
+      Value<String> locationId,
+      Value<int> inactivityMonitorDays,
+      Value<int> inactivityFollowUpDays,
+      Value<int> inactivityHighRiskDays,
+      Value<int> inactivityCriticalDays,
+      Value<int> staleImportHours,
+      Value<String?> gymPhone,
+      Value<int?> peakHighAttendance,
+      Value<String?> closureDatesJson,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$LocationSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $LocationSettingsTable> {
+  $$LocationSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get locationId => $composableBuilder(
+    column: $table.locationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get inactivityMonitorDays => $composableBuilder(
+    column: $table.inactivityMonitorDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get inactivityFollowUpDays => $composableBuilder(
+    column: $table.inactivityFollowUpDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get inactivityHighRiskDays => $composableBuilder(
+    column: $table.inactivityHighRiskDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get inactivityCriticalDays => $composableBuilder(
+    column: $table.inactivityCriticalDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get staleImportHours => $composableBuilder(
+    column: $table.staleImportHours,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gymPhone => $composableBuilder(
+    column: $table.gymPhone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get peakHighAttendance => $composableBuilder(
+    column: $table.peakHighAttendance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closureDatesJson => $composableBuilder(
+    column: $table.closureDatesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocationSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocationSettingsTable> {
+  $$LocationSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get locationId => $composableBuilder(
+    column: $table.locationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get inactivityMonitorDays => $composableBuilder(
+    column: $table.inactivityMonitorDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get inactivityFollowUpDays => $composableBuilder(
+    column: $table.inactivityFollowUpDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get inactivityHighRiskDays => $composableBuilder(
+    column: $table.inactivityHighRiskDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get inactivityCriticalDays => $composableBuilder(
+    column: $table.inactivityCriticalDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get staleImportHours => $composableBuilder(
+    column: $table.staleImportHours,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get gymPhone => $composableBuilder(
+    column: $table.gymPhone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get peakHighAttendance => $composableBuilder(
+    column: $table.peakHighAttendance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closureDatesJson => $composableBuilder(
+    column: $table.closureDatesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocationSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocationSettingsTable> {
+  $$LocationSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get locationId => $composableBuilder(
+    column: $table.locationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get inactivityMonitorDays => $composableBuilder(
+    column: $table.inactivityMonitorDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get inactivityFollowUpDays => $composableBuilder(
+    column: $table.inactivityFollowUpDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get inactivityHighRiskDays => $composableBuilder(
+    column: $table.inactivityHighRiskDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get inactivityCriticalDays => $composableBuilder(
+    column: $table.inactivityCriticalDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get staleImportHours => $composableBuilder(
+    column: $table.staleImportHours,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get gymPhone =>
+      $composableBuilder(column: $table.gymPhone, builder: (column) => column);
+
+  GeneratedColumn<int> get peakHighAttendance => $composableBuilder(
+    column: $table.peakHighAttendance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get closureDatesJson => $composableBuilder(
+    column: $table.closureDatesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LocationSettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocationSettingsTable,
+          LocationSetting,
+          $$LocationSettingsTableFilterComposer,
+          $$LocationSettingsTableOrderingComposer,
+          $$LocationSettingsTableAnnotationComposer,
+          $$LocationSettingsTableCreateCompanionBuilder,
+          $$LocationSettingsTableUpdateCompanionBuilder,
+          (
+            LocationSetting,
+            BaseReferences<
+              _$AppDatabase,
+              $LocationSettingsTable,
+              LocationSetting
+            >,
+          ),
+          LocationSetting,
+          PrefetchHooks Function()
+        > {
+  $$LocationSettingsTableTableManager(
+    _$AppDatabase db,
+    $LocationSettingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocationSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocationSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocationSettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> locationId = const Value.absent(),
+                Value<int> inactivityMonitorDays = const Value.absent(),
+                Value<int> inactivityFollowUpDays = const Value.absent(),
+                Value<int> inactivityHighRiskDays = const Value.absent(),
+                Value<int> inactivityCriticalDays = const Value.absent(),
+                Value<int> staleImportHours = const Value.absent(),
+                Value<String?> gymPhone = const Value.absent(),
+                Value<int?> peakHighAttendance = const Value.absent(),
+                Value<String?> closureDatesJson = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocationSettingsCompanion(
+                locationId: locationId,
+                inactivityMonitorDays: inactivityMonitorDays,
+                inactivityFollowUpDays: inactivityFollowUpDays,
+                inactivityHighRiskDays: inactivityHighRiskDays,
+                inactivityCriticalDays: inactivityCriticalDays,
+                staleImportHours: staleImportHours,
+                gymPhone: gymPhone,
+                peakHighAttendance: peakHighAttendance,
+                closureDatesJson: closureDatesJson,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String locationId,
+                Value<int> inactivityMonitorDays = const Value.absent(),
+                Value<int> inactivityFollowUpDays = const Value.absent(),
+                Value<int> inactivityHighRiskDays = const Value.absent(),
+                Value<int> inactivityCriticalDays = const Value.absent(),
+                Value<int> staleImportHours = const Value.absent(),
+                Value<String?> gymPhone = const Value.absent(),
+                Value<int?> peakHighAttendance = const Value.absent(),
+                Value<String?> closureDatesJson = const Value.absent(),
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => LocationSettingsCompanion.insert(
+                locationId: locationId,
+                inactivityMonitorDays: inactivityMonitorDays,
+                inactivityFollowUpDays: inactivityFollowUpDays,
+                inactivityHighRiskDays: inactivityHighRiskDays,
+                inactivityCriticalDays: inactivityCriticalDays,
+                staleImportHours: staleImportHours,
+                gymPhone: gymPhone,
+                peakHighAttendance: peakHighAttendance,
+                closureDatesJson: closureDatesJson,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocationSettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocationSettingsTable,
+      LocationSetting,
+      $$LocationSettingsTableFilterComposer,
+      $$LocationSettingsTableOrderingComposer,
+      $$LocationSettingsTableAnnotationComposer,
+      $$LocationSettingsTableCreateCompanionBuilder,
+      $$LocationSettingsTableUpdateCompanionBuilder,
+      (
+        LocationSetting,
+        BaseReferences<_$AppDatabase, $LocationSettingsTable, LocationSetting>,
+      ),
+      LocationSetting,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -20530,4 +21593,6 @@ class $AppDatabaseManager {
         _db,
         _db.backupReminderSettings,
       );
+  $$LocationSettingsTableTableManager get locationSettings =>
+      $$LocationSettingsTableTableManager(_db, _db.locationSettings);
 }

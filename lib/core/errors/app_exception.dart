@@ -22,6 +22,13 @@ class AppErrorCodes {
   static const internalUnexpected = 'INTERNAL_UNEXPECTED_ERROR';
   static const attendanceDataStale = 'ATTENDANCE_DATA_STALE';
   static const attendanceDataUnavailable = 'ATTENDANCE_DATA_UNAVAILABLE';
+  static const attendanceDuplicateEvent = 'ATTENDANCE_DUPLICATE_EVENT';
+  static const attendanceUnmatchedMember = 'ATTENDANCE_UNMATCHED_MEMBER';
+  static const importPartialFailure = 'IMPORT_PARTIAL_FAILURE';
+  static const importFailed = 'IMPORT_FAILED';
+  static const analyticsDataInsufficient = 'ANALYTICS_DATA_INSUFFICIENT';
+  static const memberNotFound = 'MEMBER_NOT_FOUND';
+  static const workspaceNotReady = 'WORKSPACE_NOT_READY';
 }
 
 class AppException implements Exception {

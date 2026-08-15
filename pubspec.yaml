@@ -2,7 +2,7 @@ name: gympulse
 description: "GymPulse local-first gym retention platform"
 publish_to: 'none'
 
-version: 0.0.1+1
+version: 0.1.0+2
 
 environment:
   sdk: ^3.12.2
@@ -31,6 +31,9 @@ dependencies:
   meta: ^1.16.0
   share_plus: ^11.0.0
   file_picker: ^10.3.3
+  url_launcher: ^6.3.1
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.1
 
 dev_dependencies:
   flutter_test:

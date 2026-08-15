@@ -20,4 +20,12 @@ abstract class MembershipRepository {
     String? memberId,
     String? locationId,
   });
+
+  Future<Membership> update({
+    required String organizationId,
+    required String id,
+    String? status,
+    DateTime? startAt,
+    DateTime? endAt,
+  });
 }

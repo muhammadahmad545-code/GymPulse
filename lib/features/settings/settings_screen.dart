@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/theme/gp_theme.dart';
+import '../attendance/import_screen.dart';
 import 'backup_settings_screen.dart';
+import 'gym_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -69,6 +71,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const BackupSettingsScreen()),
             );
+          },
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.gymSettings),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const GymSettingsScreen()),
+            );
+          },
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.importAttendance),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ImportScreen()));
           },
         ),
         const Divider(),

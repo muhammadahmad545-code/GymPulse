@@ -163,9 +163,31 @@ class AttendanceEvents extends Table {
   TextColumn get externalEventId => text().nullable()();
   TextColumn get rawPayloadJson => text().nullable()();
   DateTimeColumn get ingestedAt => dateTime()();
+  TextColumn get matchStatus =>
+      text().withDefault(const Constant('unmatched'))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
+}
+
+class LocationSettings extends Table {
+  TextColumn get locationId => text()();
+  IntColumn get inactivityMonitorDays =>
+      integer().withDefault(const Constant(7))();
+  IntColumn get inactivityFollowUpDays =>
+      integer().withDefault(const Constant(14))();
+  IntColumn get inactivityHighRiskDays =>
+      integer().withDefault(const Constant(21))();
+  IntColumn get inactivityCriticalDays =>
+      integer().withDefault(const Constant(30))();
+  IntColumn get staleImportHours => integer().withDefault(const Constant(24))();
+  TextColumn get gymPhone => text().nullable()();
+  IntColumn get peakHighAttendance => integer().nullable()();
+  TextColumn get closureDatesJson => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {locationId};
 }
 
 class Trials extends Table {
@@ -412,13 +434,25 @@ class BackupReminderSettings extends Table {
     SecurityStates,
     BackupRuns,
     BackupReminderSettings,
+    LocationSettings,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(attendanceEvents, attendanceEvents.matchStatus);
+        await m.createTable(locationSettings);
+      }
+    },
+  );
 
   static Future<AppDatabase> open() async {
     final dir = await getApplicationDocumentsDirectory();

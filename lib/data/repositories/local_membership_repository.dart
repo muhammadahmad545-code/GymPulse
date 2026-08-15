@@ -94,4 +94,35 @@ class LocalMembershipRepository implements MembershipRepository {
     }
     return query.get();
   }
+
+  @override
+  Future<Membership> update({
+    required String organizationId,
+    required String id,
+    String? status,
+    DateTime? startAt,
+    DateTime? endAt,
+  }) async {
+    final existing = await get(organizationId: organizationId, id: id);
+    if (existing == null) {
+      throw AppException(
+        code: AppErrorCodes.validationInvalidField,
+        message: 'Membership was not found.',
+      );
+    }
+    await (_db.update(_db.memberships)..where(
+          (t) => t.id.equals(id) & t.organizationId.equals(organizationId),
+        ))
+        .write(
+          MembershipsCompanion(
+            status: status == null ? const Value.absent() : Value(status),
+            startAt: startAt == null
+                ? const Value.absent()
+                : Value(startAt.toUtc()),
+            endAt: endAt == null ? const Value.absent() : Value(endAt.toUtc()),
+            updatedAt: Value(DateTime.now().toUtc()),
+          ),
+        );
+    return (await get(organizationId: organizationId, id: id))!;
+  }
 }

@@ -12,20 +12,29 @@ import '../core/logging/app_logger.dart';
 import '../core/security/secure_store.dart';
 import '../data/db/app_database.dart';
 import '../data/db/database_session.dart';
+import '../data/repositories/local_attendance_repository.dart';
 import '../data/repositories/local_audit_repository.dart';
+import '../data/repositories/local_follow_up_repository.dart';
 import '../data/repositories/local_location_repository.dart';
 import '../data/repositories/local_member_repository.dart';
 import '../data/repositories/local_membership_repository.dart';
 import '../data/repositories/local_organization_repository.dart';
 import '../data/security/keystore_secure_store.dart';
 import '../domain/attendance/attendance_source.dart';
+import '../domain/models/workspace.dart';
 import '../domain/repositories/audit_repository.dart';
 import '../domain/repositories/location_repository.dart';
 import '../domain/repositories/member_repository.dart';
 import '../domain/repositories/membership_repository.dart';
 import '../domain/repositories/organization_repository.dart';
+import '../domain/services/attendance_ingest_service.dart';
 import '../domain/services/backup_service.dart';
+import '../domain/services/contact_service.dart';
+import '../domain/services/csv_interop_service.dart';
+import '../domain/services/intelligence_service.dart';
+import '../domain/services/local_notification_service.dart';
 import '../domain/services/security_service.dart';
+import '../domain/services/workspace_service.dart';
 import '../updates/app_update_service.dart';
 
 final appConfigProvider = Provider<AppConfig>(
@@ -77,6 +86,60 @@ final auditRepositoryProvider = Provider<AuditRepository>((ref) {
   return LocalAuditRepository(db: ref.watch(appDatabaseProvider));
 });
 
+final attendanceRepositoryProvider = Provider<LocalAttendanceRepository>((ref) {
+  return LocalAttendanceRepository(db: ref.watch(appDatabaseProvider));
+});
+
+final followUpRepositoryProvider = Provider<LocalFollowUpRepository>((ref) {
+  return LocalFollowUpRepository(db: ref.watch(appDatabaseProvider));
+});
+
+final workspaceServiceProvider = Provider<WorkspaceService>((ref) {
+  return WorkspaceService(
+    db: ref.watch(appDatabaseProvider),
+    organizations: LocalOrganizationRepository(
+      db: ref.watch(appDatabaseProvider),
+    ),
+    locations: LocalLocationRepository(db: ref.watch(appDatabaseProvider)),
+  );
+});
+
+final attendanceIngestServiceProvider = Provider<AttendanceIngestService>((
+  ref,
+) {
+  return AttendanceIngestService(
+    attendance: ref.watch(attendanceRepositoryProvider),
+    members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final intelligenceServiceProvider = Provider<IntelligenceService>((ref) {
+  return IntelligenceService(
+    db: ref.watch(appDatabaseProvider),
+    members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
+    memberships: LocalMembershipRepository(db: ref.watch(appDatabaseProvider)),
+    attendance: ref.watch(attendanceRepositoryProvider),
+    followUps: ref.watch(followUpRepositoryProvider),
+  );
+});
+
+final csvInteropServiceProvider = Provider<CsvInteropService>((ref) {
+  return CsvInteropService(
+    db: ref.watch(appDatabaseProvider),
+    members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
+    attendance: ref.watch(attendanceRepositoryProvider),
+  );
+});
+
+final contactServiceProvider = Provider<ContactService>(
+  (ref) => ContactService(),
+);
+
+final localNotificationServiceProvider = Provider<LocalNotificationService>(
+  (ref) => LocalNotificationService(),
+);
+
 final securityServiceProvider = Provider<SecurityService>((ref) {
   return SecurityService(
     db: ref.watch(appDatabaseProvider),
@@ -125,3 +188,11 @@ final appUpdateServiceProvider = Provider<AppUpdateService>((ref) {
 final sessionUnlockedProvider = StateProvider<bool>((ref) => false);
 
 final pinConfiguredProvider = StateProvider<bool?>((ref) => null);
+
+final workspaceRefreshProvider = StateProvider<int>((ref) => 0);
+
+final workspaceProvider = FutureProvider<Workspace?>((ref) async {
+  ref.watch(workspaceRefreshProvider);
+  ref.watch(appDatabaseProvider);
+  return ref.watch(workspaceServiceProvider).current();
+});

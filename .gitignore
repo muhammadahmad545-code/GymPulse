@@ -51,6 +51,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
 
 # Release staging (keep checksums in release/ via CI or generated artifacts outside git)
 /dist/
