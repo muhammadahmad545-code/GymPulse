@@ -33,6 +33,7 @@ import '../domain/services/contact_service.dart';
 import '../domain/services/csv_interop_service.dart';
 import '../domain/services/intelligence_service.dart';
 import '../domain/services/local_notification_service.dart';
+import '../domain/services/retention_service.dart';
 import '../domain/services/security_service.dart';
 import '../domain/services/workspace_service.dart';
 import '../updates/android_update_platform.dart';
@@ -113,6 +114,16 @@ final attendanceIngestServiceProvider = Provider<AttendanceIngestService>((
     attendance: ref.watch(attendanceRepositoryProvider),
     members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
     logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final retentionServiceProvider = Provider<RetentionService>((ref) {
+  return RetentionService(
+    db: ref.watch(appDatabaseProvider),
+    members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
+    memberships: LocalMembershipRepository(db: ref.watch(appDatabaseProvider)),
+    attendance: ref.watch(attendanceRepositoryProvider),
+    followUps: ref.watch(followUpRepositoryProvider),
   );
 });
 

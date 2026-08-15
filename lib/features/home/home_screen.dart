@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 import '../../domain/services/intelligence_service.dart';
+import '../../domain/services/retention_service.dart';
 import '../members/member_detail_screen.dart';
 import '../settings/app_update_flow.dart';
 import '../settings/backup_settings_screen.dart';
@@ -19,6 +20,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DashboardSnapshot? _snap;
+  RetentionSnapshot? _retention;
   String? _error;
   bool _loading = true;
 
@@ -62,8 +64,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               body: health.message ?? 'Attendance data may be delayed.',
             );
       }
+      final retention = await ref
+          .read(retentionServiceProvider)
+          .snapshot(workspace: workspace, importHealth: health);
       if (!mounted) return;
-      setState(() => _snap = snap);
+      setState(() {
+        _snap = snap;
+        _retention = retention;
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = ref.read(appStringsProvider).somethingWentWrong);
@@ -125,6 +133,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _AttendanceCard(summary: snap.attendance),
           const SizedBox(height: GpSpacing.md),
           _BackupBanner(),
+          const SizedBox(height: GpSpacing.md),
+          if (_retention != null)
+            _ListCard(
+              title: s.highRiskMembers,
+              empty: s.noHighRisk,
+              children: [
+                for (final risk
+                    in _retention!.risks
+                        .where(
+                          (r) =>
+                              r.enoughData &&
+                              (r.level == 'high' || r.level == 'critical'),
+                        )
+                        .take(5))
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(risk.memberName),
+                    subtitle: Text(
+                      '${s.riskScore} ${risk.score} · ${risk.level}',
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            MemberDetailScreen(memberId: risk.memberId),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           const SizedBox(height: GpSpacing.md),
           _ListCard(
             title: s.needsAttention,

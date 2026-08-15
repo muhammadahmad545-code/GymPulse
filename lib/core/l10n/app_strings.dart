@@ -94,6 +94,24 @@ class AppStrings {
   String get trials => 'Trials';
   String get cancellations => 'Cancellations';
   String get phase2Analytics => 'basic capture only in this phase';
+  String get riskScore => 'Risk score';
+  String get riskFactors => 'Risk factors';
+  String get lowConfidence => 'Low confidence — more data needed.';
+  String get attendanceDecline => 'Attendance decline';
+  String get memberTimeline => 'Timeline';
+  String get noTimeline => 'No timeline events yet.';
+  String get startTrial => 'Start trial';
+  String get convertTrial => 'Convert trial to membership';
+  String get recordCancellation => 'Record cancellation';
+  String get cancellationReason => 'Cancellation reason';
+  String get renewalAnalytics => 'Renewal';
+  String get trialConversion => 'Trial conversion';
+  String get highRiskMembers => 'High-risk members';
+  String get noHighRisk => 'No high-risk members right now.';
+  String get riskWeights => 'Risk score weights';
+  String get trialDefaultDays => 'Default trial length (days)';
+  String get notAnAiScore =>
+      'Explainable weighted score. Not an AI prediction.';
 
   String get searchMembers => 'Search members';
   String get noMembers => 'No members yet. Add a member to get started.';

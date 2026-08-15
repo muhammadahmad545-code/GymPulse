@@ -184,6 +184,8 @@ class LocationSettings extends Table {
   TextColumn get gymPhone => text().nullable()();
   IntColumn get peakHighAttendance => integer().nullable()();
   TextColumn get closureDatesJson => text().nullable()();
+  TextColumn get riskWeightsJson => text().nullable()();
+  IntColumn get trialDefaultDays => integer().withDefault(const Constant(7))();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -441,7 +443,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -450,6 +452,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.addColumn(attendanceEvents, attendanceEvents.matchStatus);
         await m.createTable(locationSettings);
+      }
+      if (from < 3 && from >= 2) {
+        await m.addColumn(locationSettings, locationSettings.riskWeightsJson);
+        await m.addColumn(locationSettings, locationSettings.trialDefaultDays);
       }
     },
   );

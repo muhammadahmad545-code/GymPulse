@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../app/providers.dart';
 import '../../core/theme/gp_theme.dart';
 import '../../domain/services/intelligence_service.dart';
+import '../../domain/services/retention_service.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -15,6 +16,7 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   DashboardSnapshot? _snap;
+  RetentionSnapshot? _retention;
   String? _error;
   bool _loading = true;
 
@@ -38,8 +40,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       final snap = await ref
           .read(intelligenceServiceProvider)
           .dashboard(workspace: workspace, importHealth: health);
+      final retention = await ref
+          .read(retentionServiceProvider)
+          .snapshot(workspace: workspace, importHealth: health);
       if (!mounted) return;
-      setState(() => _snap = snap);
+      setState(() {
+        _snap = snap;
+        _retention = retention;
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = ref.read(appStringsProvider).somethingWentWrong);
@@ -109,10 +117,61 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             ),
           ),
-          Text(
-            '${s.trials}: ${s.phase2Analytics} · ${s.cancellations}: ${s.phase2Analytics}',
-            style: const TextStyle(color: GpColors.textSecondary),
-          ),
+          if (_retention != null) ...[
+            Card(
+              child: ListTile(
+                title: Text(s.renewalAnalytics),
+                subtitle: Text(
+                  _retention!.renewal.hasEnoughData
+                      ? '7d ${_retention!.renewal.expiring7} · 30d ${_retention!.renewal.expiring30} expiring · ${_retention!.renewal.explanation}'
+                      : _retention!.renewal.explanation,
+                ),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                title: Text(s.trialConversion),
+                subtitle: Text(
+                  _retention!.trials.conversionPercent == null
+                      ? _retention!.trials.explanation
+                      : '${_retention!.trials.conversionPercent}% · ${_retention!.trials.explanation}',
+                ),
+              ),
+            ),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(GpSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.cancellations,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(_retention!.cancellations.explanation),
+                    for (final e in _retention!.cancellations.byReason.entries)
+                      Text(
+                        '${e.key}: ${e.value} (${((_retention!.cancellations.total == 0 ? 0 : e.value / _retention!.cancellations.total) * 100).round()}%)',
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                title: Text(s.highRiskMembers),
+                subtitle: Text(
+                  _retention!.risks
+                          .where(
+                            (r) => r.level == 'high' || r.level == 'critical',
+                          )
+                          .isEmpty
+                      ? s.noHighRisk
+                      : '${_retention!.risks.where((r) => r.level == 'high' || r.level == 'critical').length} members',
+                ),
+              ),
+            ),
+          ],
           if (snap.attendance.health.lastSuccessAt != null)
             Text(
               '${s.lastImport}: ${DateFormat.yMMMd().add_Hm().format(snap.attendance.health.lastSuccessAt!.toLocal())}',

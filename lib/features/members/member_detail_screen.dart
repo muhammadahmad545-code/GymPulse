@@ -8,6 +8,7 @@ import '../../core/theme/gp_theme.dart';
 import '../../data/db/app_database.dart';
 import '../../domain/models/workspace.dart';
 import '../../domain/services/intelligence_service.dart';
+import '../../domain/services/retention_service.dart';
 import 'member_editor_screen.dart';
 
 class MemberDetailScreen extends ConsumerStatefulWidget {
@@ -23,6 +24,9 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
   Member? _member;
   MemberInsight? _insight;
   Workspace? _workspace;
+  MemberRisk? _risk;
+  List<TimelineItem> _timeline = const [];
+  Trial? _trial;
   String? _error;
 
   @override
@@ -44,6 +48,15 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
       final insights = await ref
           .read(intelligenceServiceProvider)
           .memberInsights(workspace: workspace, importHealth: health);
+      final snap = await ref
+          .read(retentionServiceProvider)
+          .snapshot(workspace: workspace, importHealth: health);
+      final trial = await ref
+          .read(retentionServiceProvider)
+          .activeTrial(workspace: workspace, memberId: widget.memberId);
+      final timeline = await ref
+          .read(retentionServiceProvider)
+          .timeline(workspace: workspace, memberId: widget.memberId);
       if (!mounted) return;
       setState(() {
         _workspace = workspace;
@@ -52,6 +65,12 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
             .where((i) => i.member.id == widget.memberId)
             .cast<MemberInsight?>()
             .firstWhere((e) => true, orElse: () => null);
+        _risk = snap.risks
+            .where((r) => r.memberId == widget.memberId)
+            .cast<MemberRisk?>()
+            .firstWhere((e) => true, orElse: () => null);
+        _trial = trial;
+        _timeline = timeline;
       });
     } catch (_) {
       if (!mounted) return;
@@ -88,13 +107,101 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
     if (workspace == null || membership == null) return;
     try {
       await ref
-          .read(membershipRepositoryProvider)
-          .update(
-            organizationId: workspace.organization.id,
-            id: membership.id,
-            status: 'active',
-            startAt: DateTime.now().toUtc(),
-            endAt: DateTime.now().toUtc().add(const Duration(days: 30)),
+          .read(retentionServiceProvider)
+          .renewExplicit(workspace: workspace, current: membership);
+      await _load();
+    } on AppException catch (e) {
+      setState(() => _error = e.message);
+    }
+  }
+
+  Future<void> _startTrial() async {
+    final workspace = _workspace;
+    if (workspace == null) return;
+    try {
+      await ref
+          .read(retentionServiceProvider)
+          .startTrial(workspace: workspace, memberId: widget.memberId);
+      await _load();
+    } on AppException catch (e) {
+      setState(() => _error = e.message);
+    }
+  }
+
+  Future<void> _convertTrial() async {
+    final workspace = _workspace;
+    final trial = _trial;
+    if (workspace == null || trial == null) return;
+    try {
+      await ref
+          .read(retentionServiceProvider)
+          .convertTrial(workspace: workspace, trialId: trial.id);
+      await _load();
+    } on AppException catch (e) {
+      setState(() => _error = e.message);
+    }
+  }
+
+  Future<void> _cancelMembership() async {
+    final workspace = _workspace;
+    if (workspace == null) return;
+    String reason = 'other';
+    final extra = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(ref.read(appStringsProvider).recordCancellation),
+          content: StatefulBuilder(
+            builder: (ctx, setLocal) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButton<String>(
+                    value: reason,
+                    isExpanded: true,
+                    items: [
+                      for (final e in CancellationReasons.defaults.entries)
+                        DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setLocal(() => reason = v);
+                    },
+                  ),
+                  TextField(
+                    controller: extra,
+                    decoration: const InputDecoration(
+                      labelText: 'Note (optional)',
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ref.read(appStringsProvider).cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ref.read(appStringsProvider).save),
+            ),
+          ],
+        );
+      },
+    );
+    final note = extra.text;
+    extra.dispose();
+    if (confirmed != true) return;
+    try {
+      await ref
+          .read(retentionServiceProvider)
+          .recordCancellation(
+            workspace: workspace,
+            memberId: widget.memberId,
+            reasonCode: reason,
+            reasonText: note,
           );
       await _load();
     } on AppException catch (e) {
@@ -227,9 +334,49 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   Text(s.noMembership),
                 if (_insight?.daysSinceVisit != null)
                   Text(s.inactiveForDays(_insight!.daysSinceVisit!)),
+                if (_trial != null) Text('${s.trials}: ${_trial!.status}'),
                 if (_error != null)
                   Text(_error!, style: const TextStyle(color: GpColors.danger)),
-                const SizedBox(height: GpSpacing.lg),
+                const SizedBox(height: GpSpacing.md),
+                if (_risk != null)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(GpSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${s.riskScore}: ${_risk!.enoughData ? _risk!.score : '—'} (${_risk!.level})',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            _risk!.enoughData
+                                ? s.notAnAiScore
+                                : s.lowConfidence,
+                            style: const TextStyle(
+                              color: GpColors.textSecondary,
+                            ),
+                          ),
+                          if (_risk!.decline != null) ...[
+                            const SizedBox(height: GpSpacing.sm),
+                            Text(
+                              '${s.attendanceDecline}: ${_risk!.decline!.explanation}',
+                            ),
+                          ],
+                          const SizedBox(height: GpSpacing.sm),
+                          Text(s.riskFactors),
+                          for (final f in _risk!.factors)
+                            Text(
+                              '${f.used ? f.points : '—'} · ${f.label}',
+                              style: const TextStyle(
+                                color: GpColors.textSecondary,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: GpSpacing.md),
                 FilledButton(onPressed: _contact, child: Text(s.contactMember)),
                 TextButton(
                   onPressed: _insight?.membership == null
@@ -241,6 +388,39 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                         : s.renewMembership,
                   ),
                 ),
+                if (_trial == null)
+                  TextButton(onPressed: _startTrial, child: Text(s.startTrial))
+                else
+                  TextButton(
+                    onPressed: _convertTrial,
+                    child: Text(s.convertTrial),
+                  ),
+                TextButton(
+                  onPressed: _cancelMembership,
+                  child: Text(s.recordCancellation),
+                ),
+                const SizedBox(height: GpSpacing.lg),
+                Text(
+                  s.memberTimeline,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (_timeline.isEmpty)
+                  Text(
+                    s.noTimeline,
+                    style: const TextStyle(color: GpColors.textSecondary),
+                  )
+                else
+                  for (final item in _timeline.take(30))
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(item.title),
+                      subtitle: Text(
+                        [
+                          item.at.toLocal().toIso8601String().split('T').first,
+                          if (item.detail != null) item.detail!,
+                        ].join(' · '),
+                      ),
+                    ),
               ],
             ),
     );

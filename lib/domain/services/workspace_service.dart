@@ -104,6 +104,8 @@ class WorkspaceService {
     String? gymPhone,
     int? peakHighAttendance,
     String? closureDatesJson,
+    String? riskWeightsJson,
+    int? trialDefaultDays,
   }) async {
     await _db
         .into(_db.locationSettings)
@@ -132,6 +134,12 @@ class WorkspaceService {
             closureDatesJson: closureDatesJson == null
                 ? const Value.absent()
                 : Value(closureDatesJson),
+            riskWeightsJson: riskWeightsJson == null
+                ? const Value.absent()
+                : Value(riskWeightsJson),
+            trialDefaultDays: trialDefaultDays == null
+                ? const Value.absent()
+                : Value(trialDefaultDays),
             updatedAt: DateTime.now().toUtc(),
           ),
         );

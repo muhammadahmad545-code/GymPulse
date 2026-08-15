@@ -39,6 +39,9 @@ class _ActionsScreenState extends ConsumerState<ActionsScreen> {
       await ref
           .read(intelligenceServiceProvider)
           .dashboard(workspace: workspace, importHealth: health);
+      await ref
+          .read(retentionServiceProvider)
+          .snapshot(workspace: workspace, importHealth: health);
       final rows = await ref
           .read(followUpRepositoryProvider)
           .listOpen(

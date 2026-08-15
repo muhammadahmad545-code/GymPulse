@@ -13724,6 +13724,29 @@ class $LocationSettingsTable extends LocationSettings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _riskWeightsJsonMeta = const VerificationMeta(
+    'riskWeightsJson',
+  );
+  @override
+  late final GeneratedColumn<String> riskWeightsJson = GeneratedColumn<String>(
+    'risk_weights_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _trialDefaultDaysMeta = const VerificationMeta(
+    'trialDefaultDays',
+  );
+  @override
+  late final GeneratedColumn<int> trialDefaultDays = GeneratedColumn<int>(
+    'trial_default_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(7),
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -13746,6 +13769,8 @@ class $LocationSettingsTable extends LocationSettings
     gymPhone,
     peakHighAttendance,
     closureDatesJson,
+    riskWeightsJson,
+    trialDefaultDays,
     updatedAt,
   ];
   @override
@@ -13837,6 +13862,24 @@ class $LocationSettingsTable extends LocationSettings
         ),
       );
     }
+    if (data.containsKey('risk_weights_json')) {
+      context.handle(
+        _riskWeightsJsonMeta,
+        riskWeightsJson.isAcceptableOrUnknown(
+          data['risk_weights_json']!,
+          _riskWeightsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('trial_default_days')) {
+      context.handle(
+        _trialDefaultDaysMeta,
+        trialDefaultDays.isAcceptableOrUnknown(
+          data['trial_default_days']!,
+          _trialDefaultDaysMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -13890,6 +13933,14 @@ class $LocationSettingsTable extends LocationSettings
         DriftSqlType.string,
         data['${effectivePrefix}closure_dates_json'],
       ),
+      riskWeightsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}risk_weights_json'],
+      ),
+      trialDefaultDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}trial_default_days'],
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -13913,6 +13964,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
   final String? gymPhone;
   final int? peakHighAttendance;
   final String? closureDatesJson;
+  final String? riskWeightsJson;
+  final int trialDefaultDays;
   final DateTime updatedAt;
   const LocationSetting({
     required this.locationId,
@@ -13924,6 +13977,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
     this.gymPhone,
     this.peakHighAttendance,
     this.closureDatesJson,
+    this.riskWeightsJson,
+    required this.trialDefaultDays,
     required this.updatedAt,
   });
   @override
@@ -13944,6 +13999,10 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
     if (!nullToAbsent || closureDatesJson != null) {
       map['closure_dates_json'] = Variable<String>(closureDatesJson);
     }
+    if (!nullToAbsent || riskWeightsJson != null) {
+      map['risk_weights_json'] = Variable<String>(riskWeightsJson);
+    }
+    map['trial_default_days'] = Variable<int>(trialDefaultDays);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -13965,6 +14024,10 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
       closureDatesJson: closureDatesJson == null && nullToAbsent
           ? const Value.absent()
           : Value(closureDatesJson),
+      riskWeightsJson: riskWeightsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(riskWeightsJson),
+      trialDefaultDays: Value(trialDefaultDays),
       updatedAt: Value(updatedAt),
     );
   }
@@ -13992,6 +14055,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
       gymPhone: serializer.fromJson<String?>(json['gymPhone']),
       peakHighAttendance: serializer.fromJson<int?>(json['peakHighAttendance']),
       closureDatesJson: serializer.fromJson<String?>(json['closureDatesJson']),
+      riskWeightsJson: serializer.fromJson<String?>(json['riskWeightsJson']),
+      trialDefaultDays: serializer.fromJson<int>(json['trialDefaultDays']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -14008,6 +14073,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
       'gymPhone': serializer.toJson<String?>(gymPhone),
       'peakHighAttendance': serializer.toJson<int?>(peakHighAttendance),
       'closureDatesJson': serializer.toJson<String?>(closureDatesJson),
+      'riskWeightsJson': serializer.toJson<String?>(riskWeightsJson),
+      'trialDefaultDays': serializer.toJson<int>(trialDefaultDays),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -14022,6 +14089,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
     Value<String?> gymPhone = const Value.absent(),
     Value<int?> peakHighAttendance = const Value.absent(),
     Value<String?> closureDatesJson = const Value.absent(),
+    Value<String?> riskWeightsJson = const Value.absent(),
+    int? trialDefaultDays,
     DateTime? updatedAt,
   }) => LocationSetting(
     locationId: locationId ?? this.locationId,
@@ -14040,6 +14109,10 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
     closureDatesJson: closureDatesJson.present
         ? closureDatesJson.value
         : this.closureDatesJson,
+    riskWeightsJson: riskWeightsJson.present
+        ? riskWeightsJson.value
+        : this.riskWeightsJson,
+    trialDefaultDays: trialDefaultDays ?? this.trialDefaultDays,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   LocationSetting copyWithCompanion(LocationSettingsCompanion data) {
@@ -14069,6 +14142,12 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
       closureDatesJson: data.closureDatesJson.present
           ? data.closureDatesJson.value
           : this.closureDatesJson,
+      riskWeightsJson: data.riskWeightsJson.present
+          ? data.riskWeightsJson.value
+          : this.riskWeightsJson,
+      trialDefaultDays: data.trialDefaultDays.present
+          ? data.trialDefaultDays.value
+          : this.trialDefaultDays,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -14085,6 +14164,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
           ..write('gymPhone: $gymPhone, ')
           ..write('peakHighAttendance: $peakHighAttendance, ')
           ..write('closureDatesJson: $closureDatesJson, ')
+          ..write('riskWeightsJson: $riskWeightsJson, ')
+          ..write('trialDefaultDays: $trialDefaultDays, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -14101,6 +14182,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
     gymPhone,
     peakHighAttendance,
     closureDatesJson,
+    riskWeightsJson,
+    trialDefaultDays,
     updatedAt,
   );
   @override
@@ -14116,6 +14199,8 @@ class LocationSetting extends DataClass implements Insertable<LocationSetting> {
           other.gymPhone == this.gymPhone &&
           other.peakHighAttendance == this.peakHighAttendance &&
           other.closureDatesJson == this.closureDatesJson &&
+          other.riskWeightsJson == this.riskWeightsJson &&
+          other.trialDefaultDays == this.trialDefaultDays &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -14129,6 +14214,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
   final Value<String?> gymPhone;
   final Value<int?> peakHighAttendance;
   final Value<String?> closureDatesJson;
+  final Value<String?> riskWeightsJson;
+  final Value<int> trialDefaultDays;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const LocationSettingsCompanion({
@@ -14141,6 +14228,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
     this.gymPhone = const Value.absent(),
     this.peakHighAttendance = const Value.absent(),
     this.closureDatesJson = const Value.absent(),
+    this.riskWeightsJson = const Value.absent(),
+    this.trialDefaultDays = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -14154,6 +14243,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
     this.gymPhone = const Value.absent(),
     this.peakHighAttendance = const Value.absent(),
     this.closureDatesJson = const Value.absent(),
+    this.riskWeightsJson = const Value.absent(),
+    this.trialDefaultDays = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : locationId = Value(locationId),
@@ -14168,6 +14259,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
     Expression<String>? gymPhone,
     Expression<int>? peakHighAttendance,
     Expression<String>? closureDatesJson,
+    Expression<String>? riskWeightsJson,
+    Expression<int>? trialDefaultDays,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -14186,6 +14279,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
       if (peakHighAttendance != null)
         'peak_high_attendance': peakHighAttendance,
       if (closureDatesJson != null) 'closure_dates_json': closureDatesJson,
+      if (riskWeightsJson != null) 'risk_weights_json': riskWeightsJson,
+      if (trialDefaultDays != null) 'trial_default_days': trialDefaultDays,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -14201,6 +14296,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
     Value<String?>? gymPhone,
     Value<int?>? peakHighAttendance,
     Value<String?>? closureDatesJson,
+    Value<String?>? riskWeightsJson,
+    Value<int>? trialDefaultDays,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -14218,6 +14315,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
       gymPhone: gymPhone ?? this.gymPhone,
       peakHighAttendance: peakHighAttendance ?? this.peakHighAttendance,
       closureDatesJson: closureDatesJson ?? this.closureDatesJson,
+      riskWeightsJson: riskWeightsJson ?? this.riskWeightsJson,
+      trialDefaultDays: trialDefaultDays ?? this.trialDefaultDays,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -14261,6 +14360,12 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
     if (closureDatesJson.present) {
       map['closure_dates_json'] = Variable<String>(closureDatesJson.value);
     }
+    if (riskWeightsJson.present) {
+      map['risk_weights_json'] = Variable<String>(riskWeightsJson.value);
+    }
+    if (trialDefaultDays.present) {
+      map['trial_default_days'] = Variable<int>(trialDefaultDays.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -14282,6 +14387,8 @@ class LocationSettingsCompanion extends UpdateCompanion<LocationSetting> {
           ..write('gymPhone: $gymPhone, ')
           ..write('peakHighAttendance: $peakHighAttendance, ')
           ..write('closureDatesJson: $closureDatesJson, ')
+          ..write('riskWeightsJson: $riskWeightsJson, ')
+          ..write('trialDefaultDays: $trialDefaultDays, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -21229,6 +21336,8 @@ typedef $$LocationSettingsTableCreateCompanionBuilder =
       Value<String?> gymPhone,
       Value<int?> peakHighAttendance,
       Value<String?> closureDatesJson,
+      Value<String?> riskWeightsJson,
+      Value<int> trialDefaultDays,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -21243,6 +21352,8 @@ typedef $$LocationSettingsTableUpdateCompanionBuilder =
       Value<String?> gymPhone,
       Value<int?> peakHighAttendance,
       Value<String?> closureDatesJson,
+      Value<String?> riskWeightsJson,
+      Value<int> trialDefaultDays,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -21298,6 +21409,16 @@ class $$LocationSettingsTableFilterComposer
 
   ColumnFilters<String> get closureDatesJson => $composableBuilder(
     column: $table.closureDatesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get riskWeightsJson => $composableBuilder(
+    column: $table.riskWeightsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get trialDefaultDays => $composableBuilder(
+    column: $table.trialDefaultDays,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -21361,6 +21482,16 @@ class $$LocationSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get riskWeightsJson => $composableBuilder(
+    column: $table.riskWeightsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get trialDefaultDays => $composableBuilder(
+    column: $table.trialDefaultDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -21419,6 +21550,16 @@ class $$LocationSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get riskWeightsJson => $composableBuilder(
+    column: $table.riskWeightsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get trialDefaultDays => $composableBuilder(
+    column: $table.trialDefaultDays,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -21469,6 +21610,8 @@ class $$LocationSettingsTableTableManager
                 Value<String?> gymPhone = const Value.absent(),
                 Value<int?> peakHighAttendance = const Value.absent(),
                 Value<String?> closureDatesJson = const Value.absent(),
+                Value<String?> riskWeightsJson = const Value.absent(),
+                Value<int> trialDefaultDays = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocationSettingsCompanion(
@@ -21481,6 +21624,8 @@ class $$LocationSettingsTableTableManager
                 gymPhone: gymPhone,
                 peakHighAttendance: peakHighAttendance,
                 closureDatesJson: closureDatesJson,
+                riskWeightsJson: riskWeightsJson,
+                trialDefaultDays: trialDefaultDays,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -21495,6 +21640,8 @@ class $$LocationSettingsTableTableManager
                 Value<String?> gymPhone = const Value.absent(),
                 Value<int?> peakHighAttendance = const Value.absent(),
                 Value<String?> closureDatesJson = const Value.absent(),
+                Value<String?> riskWeightsJson = const Value.absent(),
+                Value<int> trialDefaultDays = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => LocationSettingsCompanion.insert(
@@ -21507,6 +21654,8 @@ class $$LocationSettingsTableTableManager
                 gymPhone: gymPhone,
                 peakHighAttendance: peakHighAttendance,
                 closureDatesJson: closureDatesJson,
+                riskWeightsJson: riskWeightsJson,
+                trialDefaultDays: trialDefaultDays,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
