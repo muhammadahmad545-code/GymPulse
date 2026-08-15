@@ -456,8 +456,10 @@ void main() {
         const AppReleaseInfo(
           versionName: '0.0.2',
           versionCode: 2,
-          apkUrl: 'https://example.com/app.apk',
-          sha256: 'abc',
+          apkUrl:
+              'https://github.com/test-owner/GymPulse/releases/download/v0.0.2/app.apk',
+          sha256:
+              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
           releaseNotes: 'test',
         ),
       );
@@ -465,6 +467,8 @@ void main() {
         provider: provider,
         currentVersionCode: 1,
         applicationId: 'com.gympulse.app',
+        githubOwner: 'test-owner',
+        githubRepo: 'GymPulse',
       );
       final update = await service.checkForUpdate();
       expect(update?.versionCode, 2);
@@ -473,6 +477,8 @@ void main() {
         provider: provider,
         currentVersionCode: 2,
         applicationId: 'com.gympulse.app',
+        githubOwner: 'test-owner',
+        githubRepo: 'GymPulse',
       );
       expect(await service2.checkForUpdate(), isNull);
     });

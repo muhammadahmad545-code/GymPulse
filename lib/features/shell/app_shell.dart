@@ -6,6 +6,7 @@ import '../actions/actions_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../home/home_screen.dart';
 import '../members/members_screen.dart';
+import '../settings/app_update_flow.dart';
 import '../settings/settings_screen.dart';
 
 class AppShell extends ConsumerStatefulWidget {
@@ -15,8 +16,62 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
   int _index = 0;
+  bool _startupCheckStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _checkForUpdatesQuietly(),
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final pending = ref.read(pendingInstallProvider);
+    if (pending == null) return;
+    ref.read(pendingInstallProvider.notifier).state = null;
+    final current = ref.read(appConfigProvider).versionCode;
+    if (pending.versionCode <= current || !mounted) return;
+    final s = ref.read(appStringsProvider);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(s.installerLaunched)));
+  }
+
+  Future<void> _checkForUpdatesQuietly() async {
+    if (_startupCheckStarted) return;
+    _startupCheckStarted = true;
+    final config = ref.read(appConfigProvider);
+    if (!config.hasGithubUpdateSource) return;
+    try {
+      final update = await ref.read(appUpdateServiceProvider).checkForUpdate();
+      if (update == null || !mounted) return;
+      ref.read(availableUpdateProvider.notifier).state = update;
+      await ref
+          .read(localNotificationServiceProvider)
+          .show(
+            id: 20,
+            title: ref.read(appStringsProvider).updateAvailable,
+            body: 'GymPulse ${update.versionName} is ready to install.',
+          );
+      if (!mounted) return;
+      await showAppUpdateSheet(context: context, ref: ref, info: update);
+    } catch (_) {
+      // Optional network feature — core app stays usable offline.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

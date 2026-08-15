@@ -35,6 +35,8 @@ import '../domain/services/intelligence_service.dart';
 import '../domain/services/local_notification_service.dart';
 import '../domain/services/security_service.dart';
 import '../domain/services/workspace_service.dart';
+import '../updates/android_update_platform.dart';
+import '../updates/apk_http_downloader.dart';
 import '../updates/app_update_service.dart';
 
 final appConfigProvider = Provider<AppConfig>(
@@ -167,6 +169,7 @@ final mockAttendanceSourceProvider = Provider<MockAttendanceSource>((ref) {
 
 final appUpdateServiceProvider = Provider<AppUpdateService>((ref) {
   final config = ref.watch(appConfigProvider);
+  final platform = AndroidUpdatePlatform();
   final provider = GitHubReleaseUpdateProvider(
     owner: config.githubUpdateOwner,
     repo: config.githubUpdateRepo,
@@ -182,8 +185,19 @@ final appUpdateServiceProvider = Provider<AppUpdateService>((ref) {
     provider: provider,
     currentVersionCode: config.versionCode,
     applicationId: config.applicationId,
+    githubOwner: config.githubUpdateOwner,
+    githubRepo: config.githubUpdateRepo,
+    downloader: HttpApkDownloader(),
+    inspector: platform,
+    installer: platform,
+    diskSpace: platform,
+    resolveCacheDirectory: getTemporaryDirectory,
   );
 });
+
+final availableUpdateProvider = StateProvider<AppReleaseInfo?>((ref) => null);
+
+final pendingInstallProvider = StateProvider<AppReleaseInfo?>((ref) => null);
 
 final sessionUnlockedProvider = StateProvider<bool>((ref) => false);
 

@@ -145,6 +145,17 @@ class AppStrings {
   String get updateAvailable => 'Update available';
   String get updateNow => 'Update now';
   String get later => 'Later';
+  String get checkForUpdates => 'Check for updates';
+  String get checkingForUpdates => 'Checking for updates…';
+  String get upToDate => 'You are on the latest version.';
+  String get downloadingUpdate => 'Downloading update…';
+  String get installerLaunched =>
+      'Android will ask you to confirm installation. If you cancel, GymPulse stays on this version.';
+  String get updateCancelled => 'Update download cancelled.';
+  String get updateCheckFailed =>
+      'Could not check for updates. Check your connection and try again.';
+  String get updatesNeedNetwork =>
+      'Checking for updates needs a network connection. GymPulse still works offline.';
 
   String lockoutCooldown(int seconds) =>
       'Too many attempts. Try again in ${seconds}s.';

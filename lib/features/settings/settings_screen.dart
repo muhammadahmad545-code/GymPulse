@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/theme/gp_theme.dart';
 import '../attendance/import_screen.dart';
+import 'app_update_flow.dart';
 import 'backup_settings_screen.dart';
 import 'gym_settings_screen.dart';
 
@@ -21,6 +22,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _next = TextEditingController();
   final _confirm = TextEditingController();
   String? _message;
+  String? _updateMessage;
+  bool _checkingUpdate = false;
 
   @override
   void dispose() {
@@ -28,6 +31,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _next.dispose();
     _confirm.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkForUpdates() async {
+    final s = ref.read(appStringsProvider);
+    setState(() {
+      _checkingUpdate = true;
+      _updateMessage = s.checkingForUpdates;
+    });
+    try {
+      final update = await ref.read(appUpdateServiceProvider).checkForUpdate();
+      if (!mounted) return;
+      if (update == null) {
+        setState(() => _updateMessage = s.upToDate);
+        return;
+      }
+      ref.read(availableUpdateProvider.notifier).state = update;
+      setState(() => _updateMessage = s.updateAvailable);
+      await showAppUpdateSheet(context: context, ref: ref, info: update);
+    } on AppException catch (e) {
+      if (!mounted) return;
+      setState(() => _updateMessage = e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _updateMessage = s.updateCheckFailed);
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
+    }
   }
 
   Future<void> _changePin() async {
@@ -135,6 +165,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ref.read(securityServiceProvider).lock();
             ref.read(sessionUnlockedProvider.notifier).state = false;
           },
+        ),
+        const Divider(),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.checkForUpdates),
+          subtitle: Text(
+            _updateMessage ??
+                'v${config.versionName} (${config.versionCode}) · ${config.applicationId}',
+          ),
+          trailing: _checkingUpdate
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.system_update_alt),
+          onTap: _checkingUpdate ? null : _checkForUpdates,
+        ),
+        Text(
+          s.updatesNeedNetwork,
+          style: const TextStyle(color: GpColors.textSecondary),
         ),
         const SizedBox(height: GpSpacing.lg),
         Text(

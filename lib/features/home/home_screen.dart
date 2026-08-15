@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../../core/theme/gp_theme.dart';
 import '../../domain/services/intelligence_service.dart';
 import '../members/member_detail_screen.dart';
+import '../settings/app_update_flow.dart';
 import '../settings/backup_settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -103,6 +104,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: const TextStyle(color: GpColors.textSecondary),
           ),
           const SizedBox(height: GpSpacing.lg),
+          const UpdateAvailableBanner(),
+          const SizedBox(height: GpSpacing.md),
           _HealthCard(score: snap.healthScore),
           const SizedBox(height: GpSpacing.md),
           _AttendanceCard(summary: snap.attendance),

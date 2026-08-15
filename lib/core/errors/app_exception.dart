@@ -18,6 +18,13 @@ class AppErrorCodes {
   static const restoreIntegrityFailed = 'RESTORE_INTEGRITY_FAILED';
   static const updateCheckFailed = 'UPDATE_CHECK_FAILED';
   static const updateDownloadFailed = 'UPDATE_DOWNLOAD_FAILED';
+  static const updateCancelled = 'UPDATE_CANCELLED';
+  static const updateInsufficientStorage = 'UPDATE_INSUFFICIENT_STORAGE';
+  static const updateIntegrityFailed = 'UPDATE_INTEGRITY_FAILED';
+  static const updateInvalidPackage = 'UPDATE_INVALID_PACKAGE';
+  static const updateInvalidVersion = 'UPDATE_INVALID_VERSION';
+  static const updateInstallFailed = 'UPDATE_INSTALL_FAILED';
+  static const updatePermissionRequired = 'UPDATE_PERMISSION_REQUIRED';
   static const dbCorruptionDetected = 'DB_CORRUPTION_DETECTED';
   static const internalUnexpected = 'INTERNAL_UNEXPECTED_ERROR';
   static const attendanceDataStale = 'ATTENDANCE_DATA_STALE';
