@@ -1,0 +1,125 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../app/providers.dart';
+import '../../core/errors/app_exception.dart';
+import '../../core/theme/gp_theme.dart';
+import 'backup_settings_screen.dart';
+
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _current = TextEditingController();
+  final _next = TextEditingController();
+  final _confirm = TextEditingController();
+  String? _message;
+
+  @override
+  void dispose() {
+    _current.dispose();
+    _next.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  Future<void> _changePin() async {
+    setState(() => _message = null);
+    try {
+      await ref
+          .read(securityServiceProvider)
+          .changePin(
+            currentPin: _current.text,
+            newPin: _next.text,
+            confirmNewPin: _confirm.text,
+          );
+      _current.clear();
+      _next.clear();
+      _confirm.clear();
+      setState(() => _message = 'PIN updated.');
+    } on AppException catch (e) {
+      setState(() => _message = e.message);
+    } catch (_) {
+      setState(
+        () => _message = ref.read(appStringsProvider).somethingWentWrong,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ref.watch(appStringsProvider);
+    final config = ref.watch(appConfigProvider);
+    return ListView(
+      padding: const EdgeInsets.all(GpSpacing.lg),
+      children: [
+        Text(s.settingsTitle, style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: GpSpacing.md),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.backupRestore),
+          subtitle: Text(s.backupEducation),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BackupSettingsScreen()),
+            );
+          },
+        ),
+        const Divider(),
+        Text(s.securityTitle, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: GpSpacing.sm),
+        TextField(
+          controller: _current,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: const InputDecoration(labelText: 'Current PIN'),
+        ),
+        const SizedBox(height: GpSpacing.sm),
+        TextField(
+          controller: _next,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(labelText: s.pinLabel),
+        ),
+        const SizedBox(height: GpSpacing.sm),
+        TextField(
+          controller: _confirm,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(labelText: s.pinConfirmLabel),
+        ),
+        if (_message != null) ...[
+          const SizedBox(height: GpSpacing.sm),
+          Text(_message!),
+        ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(onPressed: _changePin, child: Text(s.changePin)),
+        ),
+        const Divider(),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(s.lockApp),
+          onTap: () {
+            ref.read(securityServiceProvider).lock();
+            ref.read(sessionUnlockedProvider.notifier).state = false;
+          },
+        ),
+        const SizedBox(height: GpSpacing.lg),
+        Text(
+          'v${config.versionName} (${config.versionCode}) · ${config.applicationId}',
+          style: const TextStyle(color: GpColors.textSecondary),
+        ),
+      ],
+    );
+  }
+}
