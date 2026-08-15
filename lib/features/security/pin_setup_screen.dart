@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
+import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 
 class PinSetupScreen extends ConsumerStatefulWidget {
@@ -57,12 +58,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         child: ListView(
           padding: const EdgeInsets.all(GpSpacing.lg),
           children: [
-            Text(s.appName, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: GpSpacing.sm),
-            Text(
-              s.setupPinTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            GpBrandHeader(subtitle: s.setupPinTitle),
             const SizedBox(height: GpSpacing.sm),
             Text(
               s.setupPinSubtitle,

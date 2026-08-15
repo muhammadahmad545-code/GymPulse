@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/providers.dart';
+import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 import '../../domain/services/intelligence_service.dart';
 import '../members/member_detail_screen.dart';
@@ -95,13 +96,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: ListView(
         padding: const EdgeInsets.all(GpSpacing.lg),
         children: [
-          Text(
-            workspace.organization.name,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          Text(
-            '${workspace.location.name} · ${workspace.location.timezone} · ${workspace.location.currencyCode}',
-            style: const TextStyle(color: GpColors.textSecondary),
+          Row(
+            children: [
+              const GpLogo(size: 40),
+              const SizedBox(width: GpSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      workspace.organization.name,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    Text(
+                      '${workspace.location.name} · ${workspace.location.timezone} · ${workspace.location.currencyCode}',
+                      style: const TextStyle(color: GpColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: GpSpacing.lg),
           const UpdateAvailableBanner(),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/i18n/locale_catalogs.dart';
+import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 
 class OrgSetupScreen extends ConsumerStatefulWidget {
@@ -71,7 +72,7 @@ class _OrgSetupScreenState extends ConsumerState<OrgSetupScreen> {
         child: ListView(
           padding: const EdgeInsets.all(GpSpacing.lg),
           children: [
-            Text(s.appName, style: Theme.of(context).textTheme.headlineMedium),
+            const GpBrandHeader(subtitle: null),
             const SizedBox(height: GpSpacing.sm),
             Text(
               s.setupGymTitle,

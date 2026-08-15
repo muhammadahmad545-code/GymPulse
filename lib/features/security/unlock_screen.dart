@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
+import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 import 'recovery_screen.dart';
 
@@ -66,15 +67,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Text(
-                s.appName,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: GpSpacing.sm),
-              Text(
-                s.unlockTitle,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              GpBrandHeader(subtitle: s.unlockTitle),
               const SizedBox(height: GpSpacing.lg),
               TextField(
                 controller: _pinController,

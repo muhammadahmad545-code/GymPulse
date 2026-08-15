@@ -41,6 +41,18 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.26.1
   build_runner: ^2.4.15
+  flutter_launcher_icons: ^0.14.4
+  image: ^4.8.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/branding/gympulse_icon.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/branding/gympulse_icon.png
+  adaptive_icon_background: "#0E1114"
+  adaptive_icon_foreground: assets/branding/gympulse_icon.png
+  min_sdk_android: 21

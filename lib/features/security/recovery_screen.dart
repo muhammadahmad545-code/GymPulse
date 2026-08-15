@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
+import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 
 class RecoveryScreen extends ConsumerStatefulWidget {
@@ -94,6 +95,8 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
       body: ListView(
         padding: const EdgeInsets.all(GpSpacing.lg),
         children: [
+          const GpLogo(size: 48),
+          const SizedBox(height: GpSpacing.lg),
           Text(s.restoreBackup, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: GpSpacing.sm),
           Text(

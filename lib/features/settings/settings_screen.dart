@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
+import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
 import '../attendance/import_screen.dart';
 import 'app_update_flow.dart';
@@ -90,8 +91,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return ListView(
       padding: const EdgeInsets.all(GpSpacing.lg),
       children: [
-        Text(s.settingsTitle, style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: GpSpacing.md),
+        GpBrandHeader(logoSize: 48, compact: true, subtitle: s.settingsTitle),
+        const SizedBox(height: GpSpacing.lg),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(s.backupRestore),
