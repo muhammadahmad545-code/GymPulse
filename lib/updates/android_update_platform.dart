@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../core/errors/app_exception.dart';
 import 'update_contracts.dart';
 
-const updateMethodChannel = MethodChannel('com.gympulse.app/updates');
+const updateMethodChannel = MethodChannel('com.mrgym.app/updates');
 
 class AndroidUpdatePlatform implements ApkInspector, ApkInstaller, DiskSpace {
   AndroidUpdatePlatform({MethodChannel? channel})
@@ -78,7 +78,7 @@ class AndroidUpdatePlatform implements ApkInspector, ApkInstaller, DiskSpace {
       if (error.code == AppErrorCodes.updatePermissionRequired) {
         throw AppException(
           code: AppErrorCodes.updatePermissionRequired,
-          message: 'Allow GymPulse to install updates, then tap Update again.',
+          message: 'Allow Mr. Gym to install updates, then tap Update again.',
           cause: error,
         );
       }

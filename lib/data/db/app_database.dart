@@ -546,7 +546,11 @@ class AppDatabase extends _$AppDatabase {
 
   static Future<AppDatabase> open() async {
     final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, 'gympulse.sqlite'));
+    final legacy = File(p.join(dir.path, 'mr_gym.sqlite'));
+    final file = File(p.join(dir.path, 'mr_gym.sqlite'));
+    if (!await file.exists() && await legacy.exists()) {
+      await legacy.rename(file.path);
+    }
     return AppDatabase(NativeDatabase.createInBackground(file));
   }
 

@@ -4,21 +4,21 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gympulse/core/config/app_config.dart';
-import 'package:gympulse/core/crypto/crypto_service.dart';
-import 'package:gympulse/core/errors/app_exception.dart';
-import 'package:gympulse/core/logging/app_logger.dart';
-import 'package:gympulse/core/security/secure_store.dart';
-import 'package:gympulse/data/db/app_database.dart';
-import 'package:gympulse/data/db/database_session.dart';
-import 'package:gympulse/data/repositories/local_location_repository.dart';
-import 'package:gympulse/data/repositories/local_member_repository.dart';
-import 'package:gympulse/data/repositories/local_membership_repository.dart';
-import 'package:gympulse/data/repositories/local_organization_repository.dart';
-import 'package:gympulse/domain/attendance/attendance_source.dart';
-import 'package:gympulse/domain/services/backup_service.dart';
-import 'package:gympulse/domain/services/security_service.dart';
-import 'package:gympulse/updates/app_update_service.dart';
+import 'package:mr_gym/core/config/app_config.dart';
+import 'package:mr_gym/core/crypto/crypto_service.dart';
+import 'package:mr_gym/core/errors/app_exception.dart';
+import 'package:mr_gym/core/logging/app_logger.dart';
+import 'package:mr_gym/core/security/secure_store.dart';
+import 'package:mr_gym/data/db/app_database.dart';
+import 'package:mr_gym/data/db/database_session.dart';
+import 'package:mr_gym/data/repositories/local_location_repository.dart';
+import 'package:mr_gym/data/repositories/local_member_repository.dart';
+import 'package:mr_gym/data/repositories/local_membership_repository.dart';
+import 'package:mr_gym/data/repositories/local_organization_repository.dart';
+import 'package:mr_gym/domain/attendance/attendance_source.dart';
+import 'package:mr_gym/domain/services/backup_service.dart';
+import 'package:mr_gym/domain/services/security_service.dart';
+import 'package:mr_gym/updates/app_update_service.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -170,8 +170,8 @@ void main() {
     late SecurityService security;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('gympulse-p0-');
-      dbFile = File(p.join(tempDir.path, 'gympulse.sqlite'));
+      tempDir = await Directory.systemTemp.createTemp('mr-gym-p0-');
+      dbFile = File(p.join(tempDir.path, 'mr_gym.sqlite'));
       db = AppDatabase(NativeDatabase(dbFile));
       session = DatabaseSession(db, () async {
         return AppDatabase(NativeDatabase(dbFile));
@@ -182,8 +182,8 @@ void main() {
         logger: AppLogger(sink: (_, __, {error, stackTrace}) {}),
         config: const AppConfig(
           githubUpdateOwner: '',
-          githubUpdateRepo: 'GymPulse',
-          applicationId: 'com.gympulse.app',
+          githubUpdateRepo: 'Mr-Gym',
+          applicationId: 'com.mrgym.app',
           versionName: '0.0.1',
           versionCode: 1,
         ),
@@ -221,7 +221,7 @@ void main() {
         password: 'backup-pass',
         confirmPassword: 'backup-pass',
       );
-      expect(file.path.endsWith('.gympulse-backup'), isTrue);
+      expect(file.path.endsWith('.mrgym-backup'), isTrue);
       final raw = await file.readAsString();
       expect(raw.contains('SQLite format 3'), isFalse);
       expect(raw.contains('Alpha Gym'), isFalse);
@@ -317,7 +317,7 @@ void main() {
         countryCode: 'PK',
         defaultCurrency: 'PKR',
       );
-      final junk = File(p.join(tempDir.path, 'broken.gympulse-backup'));
+      final junk = File(p.join(tempDir.path, 'broken.mr-gym-backup'));
       await junk.writeAsString('not-a-backup');
 
       expect(
@@ -342,7 +342,7 @@ void main() {
         password: 'backup-pass',
       );
       package['formatVersion'] = '999';
-      final file = File(p.join(tempDir.path, 'old.gympulse-backup'));
+      final file = File(p.join(tempDir.path, 'old.mr-gym-backup'));
       await file.writeAsString(jsonEncode(package));
 
       expect(
@@ -457,7 +457,7 @@ void main() {
           versionName: '0.0.2',
           versionCode: 2,
           apkUrl:
-              'https://github.com/test-owner/GymPulse/releases/download/v0.0.2/app.apk',
+              'https://github.com/test-owner/Mr-Gym/releases/download/v0.0.2/app.apk',
           sha256:
               'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
           releaseNotes: 'test',
@@ -466,9 +466,9 @@ void main() {
       final service = AppUpdateService(
         provider: provider,
         currentVersionCode: 1,
-        applicationId: 'com.gympulse.app',
+        applicationId: 'com.mrgym.app',
         githubOwner: 'test-owner',
-        githubRepo: 'GymPulse',
+        githubRepo: 'Mr-Gym',
       );
       final update = await service.checkForUpdate();
       expect(update?.versionCode, 2);
@@ -476,9 +476,9 @@ void main() {
       final service2 = AppUpdateService(
         provider: provider,
         currentVersionCode: 2,
-        applicationId: 'com.gympulse.app',
+        applicationId: 'com.mrgym.app',
         githubOwner: 'test-owner',
-        githubRepo: 'GymPulse',
+        githubRepo: 'Mr-Gym',
       );
       expect(await service2.checkForUpdate(), isNull);
     });

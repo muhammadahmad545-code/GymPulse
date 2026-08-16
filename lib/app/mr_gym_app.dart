@@ -8,14 +8,14 @@ import '../features/security/unlock_screen.dart';
 import '../features/setup/org_setup_screen.dart';
 import '../features/shell/app_shell.dart';
 
-class GymPulseApp extends ConsumerStatefulWidget {
-  const GymPulseApp({super.key});
+class MrGymApp extends ConsumerStatefulWidget {
+  const MrGymApp({super.key});
 
   @override
-  ConsumerState<GymPulseApp> createState() => _GymPulseAppState();
+  ConsumerState<MrGymApp> createState() => _MrGymAppState();
 }
 
-class _GymPulseAppState extends ConsumerState<GymPulseApp>
+class _MrGymAppState extends ConsumerState<MrGymApp>
     with WidgetsBindingObserver {
   DateTime? _pausedAt;
 
@@ -24,6 +24,7 @@ class _GymPulseAppState extends ConsumerState<GymPulseApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadPinState();
+    _loadTheme();
   }
 
   @override
@@ -41,6 +42,12 @@ class _GymPulseAppState extends ConsumerState<GymPulseApp>
     if (configured) {
       ref.read(sessionUnlockedProvider.notifier).state = false;
     }
+  }
+
+  Future<void> _loadTheme() async {
+    final mode = await ref.read(appearanceServiceProvider).load();
+    if (!mounted) return;
+    ref.read(themeModeProvider.notifier).state = mode;
   }
 
   @override
@@ -61,6 +68,7 @@ class _GymPulseAppState extends ConsumerState<GymPulseApp>
   Widget build(BuildContext context) {
     final unlocked = ref.watch(sessionUnlockedProvider);
     final pinConfigured = ref.watch(pinConfiguredProvider);
+    final themeMode = ref.watch(themeModeProvider);
     final s = ref.watch(appStringsProvider);
 
     Widget home;
@@ -84,9 +92,9 @@ class _GymPulseAppState extends ConsumerState<GymPulseApp>
     return MaterialApp(
       title: s.appName,
       debugShowCheckedModeBanner: false,
-      theme: buildGymPulseLightTheme(),
-      darkTheme: buildGymPulseDarkTheme(),
-      themeMode: ThemeMode.dark,
+      theme: buildMrGymLightTheme(),
+      darkTheme: buildMrGymDarkTheme(),
+      themeMode: themeMode,
       home: home,
     );
   }

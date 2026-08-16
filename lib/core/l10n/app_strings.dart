@@ -31,6 +31,10 @@ class AppStrings {
       'Your data stays on this phone. Create encrypted backups regularly.';
 
   String get settingsTitle => 'Settings';
+  String get appearanceTitle => 'Appearance';
+  String get themeDark => 'Dark';
+  String get themeLight => 'Light';
+  String get themeSystem => 'System';
   String get securityTitle => 'Security';
   String get changePin => 'Change PIN';
   String get backupRestore => 'Backup & Restore';
@@ -168,11 +172,6 @@ class AppStrings {
   String get notifyImportStale => 'Stale import';
   String get notifyHighRisk => 'High-risk members';
   String get notifyExpiryQueue => 'Expiry queue';
-  String get addAnotherLocation =>
-      'Add another location to compare. Data stays on this phone.';
-  String get windowsConnectorHelp =>
-      'Optional free Windows tool: drop official CSV/JSON exports into a folder and it writes a GymPulse attendance file. No paid cloud relay.';
-
   String get searchMembers => 'Search members';
   String get noMembers => 'No members yet. Add a member to get started.';
   String get addMember => 'Add member';

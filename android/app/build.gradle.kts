@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.gympulse.app"
+    namespace = "com.mrgym.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +16,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.gympulse.app"
+        applicationId = "com.mrgym.app"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

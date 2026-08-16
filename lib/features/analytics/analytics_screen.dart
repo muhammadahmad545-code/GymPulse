@@ -151,31 +151,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
               ),
             Card(
-              child: Padding(
-                padding: const EdgeInsets.all(GpSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      s.locations,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    if (_ops!.locations.length < 2)
-                      Text(
-                        s.addAnotherLocation,
-                        style: const TextStyle(color: GpColors.textSecondary),
-                      ),
-                    for (final row in _ops!.locations)
-                      Text(
-                        row.reliable
-                            ? '${row.name}: ${row.visits} ${s.visits} · ${row.uniqueVisitors} unique · ${row.unmatched} unmatched'
-                            : '${row.name}: ${row.explanation}',
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            Card(
               child: ListTile(
                 title: Text(s.dailySummary),
                 subtitle: Text(_ops!.daily.explanation),

@@ -17,18 +17,18 @@ class AppConfig {
   bool get hasGithubUpdateSource =>
       githubUpdateOwner.isNotEmpty && githubUpdateRepo.isNotEmpty;
 
-  static const applicationIdValue = 'com.gympulse.app';
+  static const applicationIdValue = 'com.mrgym.app';
 
   factory AppConfig.fromEnvironment() {
     return const AppConfig(
       githubUpdateOwner: String.fromEnvironment('GITHUB_UPDATE_OWNER'),
       githubUpdateRepo: String.fromEnvironment(
         'GITHUB_UPDATE_REPO',
-        defaultValue: 'GymPulse',
+        defaultValue: 'Mr-Gym',
       ),
       applicationId: applicationIdValue,
-      versionName: '1.0.0',
-      versionCode: 8,
+      versionName: '1.1.0',
+      versionCode: 9,
     );
   }
 }

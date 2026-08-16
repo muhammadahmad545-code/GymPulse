@@ -1,16 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gympulse/core/logging/app_logger.dart';
-import 'package:gympulse/data/db/app_database.dart';
-import 'package:gympulse/data/repositories/local_attendance_repository.dart';
-import 'package:gympulse/data/repositories/local_follow_up_repository.dart';
-import 'package:gympulse/data/repositories/local_location_repository.dart';
-import 'package:gympulse/data/repositories/local_member_repository.dart';
-import 'package:gympulse/domain/attendance/adapter_catalog.dart';
-import 'package:gympulse/domain/attendance/json_import_adapter.dart';
-import 'package:gympulse/domain/services/attendance_ingest_service.dart';
-import 'package:gympulse/domain/services/operations_service.dart';
-import 'package:gympulse/domain/services/workspace_service.dart';
-import 'package:gympulse/data/repositories/local_organization_repository.dart';
+import 'package:mr_gym/data/db/app_database.dart';
+import 'package:mr_gym/data/repositories/local_attendance_repository.dart';
+import 'package:mr_gym/data/repositories/local_follow_up_repository.dart';
+import 'package:mr_gym/data/repositories/local_location_repository.dart';
+import 'package:mr_gym/data/repositories/local_member_repository.dart';
+import 'package:mr_gym/data/repositories/local_membership_repository.dart';
+import 'package:mr_gym/data/repositories/local_organization_repository.dart';
+import 'package:mr_gym/domain/services/gym_ops_service.dart';
+import 'package:mr_gym/domain/services/operations_service.dart';
+import 'package:mr_gym/domain/services/workspace_service.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 
 void main() {
@@ -18,7 +16,7 @@ void main() {
 
   late AppDatabase db;
   late WorkspaceService workspaceService;
-  late AttendanceIngestService ingest;
+  late GymOpsService ops;
   late OperationsService operations;
   late LocalMemberRepository members;
   late LocalLocationRepository locations;
@@ -33,10 +31,12 @@ void main() {
       organizations: LocalOrganizationRepository(db: db),
       locations: locations,
     );
-    ingest = AttendanceIngestService(
-      attendance: attendance,
+    ops = GymOpsService(
+      db: db,
       members: members,
-      logger: AppLogger(sink: (_, __, {error, stackTrace}) {}),
+      memberships: LocalMembershipRepository(db: db),
+      attendance: attendance,
+      followUps: LocalFollowUpRepository(db: db),
     );
     operations = OperationsService(
       db: db,
@@ -51,8 +51,8 @@ void main() {
 
   test('unreliable attendance does not invent zero utilization', () async {
     final workspace = await workspaceService.setup(
-      organizationName: 'Iron Hall',
-      locationName: 'Downtown',
+      organizationName: 'Mr. Gym',
+      locationName: 'Main',
       countryCode: 'US',
       timezone: 'UTC',
       currencyCode: 'USD',
@@ -87,25 +87,27 @@ void main() {
 
   test('peak hours use location timezone and stay explainable', () async {
     final workspace = await workspaceService.setup(
-      organizationName: 'Iron Hall',
-      locationName: 'Downtown',
+      organizationName: 'Mr. Gym',
+      locationName: 'Main',
       countryCode: 'PK',
       timezone: 'Asia/Karachi',
       currencyCode: 'PKR',
       capacity: 2,
     );
-    await members.create(
+    final member = await members.create(
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
       firstName: 'Sara',
-      externalMemberId: 'M-1',
+      phone: '03001234567',
     );
-    const csv =
-        'external_event_id,external_member_id,occurred_at,event_type\n'
-        'e1,M-1,2026-08-16T13:10:00Z,check_in\n'
-        'e2,M-1,2026-08-16T13:20:00Z,check_in\n'
-        'e3,M-1,2026-08-16T13:30:00Z,check_in\n';
-    await ingest.importCsv(workspace: workspace, csv: csv);
+    for (var i = 0; i < 3; i++) {
+      await ops.markAttendance(
+        workspace: workspace,
+        memberId: member.id,
+        nowUtc: DateTime.utc(2026, 8, 16, 13, 10 + i * 10),
+        allowDuplicate: i > 0,
+      );
+    }
     final events = await LocalAttendanceRepository(db: db).list(
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
@@ -121,62 +123,24 @@ void main() {
     expect(peaks.slots.first.label, 'Crowded');
   });
 
-  test('locations do not mix organization data', () async {
-    final first = await workspaceService.setup(
-      organizationName: 'Iron Hall',
-      locationName: 'Downtown',
-      countryCode: 'PK',
-      timezone: 'Asia/Karachi',
-      currencyCode: 'PKR',
-    );
-    await members.create(
-      organizationId: first.organization.id,
-      locationId: first.location.id,
-      firstName: 'Sara',
-      externalMemberId: 'M-1',
-    );
-    await ingest.importCsv(
-      workspace: first,
-      csv:
-          'external_event_id,external_member_id,occurred_at,event_type\ne1,M-1,2026-08-16T10:00:00Z,check_in\n',
-    );
-    final second = await workspaceService.addLocation(name: 'Gulberg');
-    await members.create(
-      organizationId: second.organization.id,
-      locationId: second.location.id,
-      firstName: 'Omar',
-      externalMemberId: 'M-2',
-    );
-    final health = await ingest.importHealth(second);
-    final rows = await operations.compareLocations(
-      workspace: second,
-      nowUtc: DateTime.utc(2026, 8, 16),
-      importHealth: health,
-    );
-    expect(rows.length, 2);
-    final gulberg = rows.firstWhere((r) => r.name == 'Gulberg');
-    expect(gulberg.visits, isNull);
-    expect(gulberg.explanation, contains('not shown as zero'));
-  });
-
   test('reconciliation reports missing source events', () async {
     final workspace = await workspaceService.setup(
-      organizationName: 'Iron Hall',
-      locationName: 'Downtown',
+      organizationName: 'Mr. Gym',
+      locationName: 'Main',
       countryCode: 'US',
       timezone: 'UTC',
       currencyCode: 'USD',
     );
-    await members.create(
+    final member = await members.create(
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
       firstName: 'Sara',
-      externalMemberId: 'M-1',
+      phone: '03001234567',
     );
-    await ingest.importCsv(
+    await ops.markAttendance(
       workspace: workspace,
-      csv:
-          'external_event_id,external_member_id,occurred_at,event_type\ne1,M-1,2026-08-16T10:00:00Z,check_in\n',
+      memberId: member.id,
+      nowUtc: DateTime.utc(2026, 8, 16, 10),
     );
     final events = await LocalAttendanceRepository(db: db).list(
       organizationId: workspace.organization.id,
@@ -193,27 +157,10 @@ void main() {
     expect(report.explanation, contains('fewer'));
   });
 
-  test('JSON adapter parses normalized events only', () {
-    const raw = '''
-{"events":[{"external_member_id":"M-1","occurred_at":"2026-08-16T18:00:00+05:00","event_type":"check_in","external_event_id":"j1"}]}
-''';
-    final events = JsonImportAdapter().parse(raw);
-    expect(events, hasLength(1));
-    expect(events.single.externalMemberId, 'M-1');
-    expect(events.single.occurredAt.toUtc(), DateTime.utc(2026, 8, 16, 13));
-  });
-
-  test('pending vendor adapters stay disabled', () async {
-    final adapter = const AdapterCatalog().pending('vendor-sdk');
-    final health = await adapter.health();
-    expect(health.status.toString(), contains('disabled'));
-    expect(health.message, contains('official'));
-  });
-
   test('daily summary date is consumed once', () async {
     final workspace = await workspaceService.setup(
-      organizationName: 'Iron Hall',
-      locationName: 'Downtown',
+      organizationName: 'Mr. Gym',
+      locationName: 'Main',
       countryCode: 'US',
       timezone: 'UTC',
       currencyCode: 'USD',

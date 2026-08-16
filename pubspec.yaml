@@ -1,8 +1,8 @@
-name: gympulse
+name: mr_gym
 description: "Mr. Gym offline gym management for a single gym"
 publish_to: 'none'
 
-version: 1.0.0+8
+version: 1.1.0+9
 
 environment:
   sdk: ^3.12.2
@@ -47,12 +47,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/branding/gympulse_icon.png
+    - assets/branding/mr_gym_icon.png
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/branding/gympulse_icon.png
+  image_path: assets/branding/mr_gym_icon.png
   adaptive_icon_background: "#0E1114"
-  adaptive_icon_foreground: assets/branding/gympulse_icon.png
+  adaptive_icon_foreground: assets/branding/mr_gym_icon.png
   min_sdk_android: 21

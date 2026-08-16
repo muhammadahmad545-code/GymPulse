@@ -190,7 +190,7 @@ class AppUpdateService {
       if (identity.packageName != applicationId) {
         throw AppException(
           code: AppErrorCodes.updateInvalidPackage,
-          message: 'This update is not a GymPulse package and was discarded.',
+          message: 'This update is not a Mr. Gym package and was discarded.',
         );
       }
       if (identity.versionCode != validated.versionCode ||
@@ -259,7 +259,7 @@ class AppUpdateService {
       await _deleteQuietly(prepared.file);
       throw AppException(
         code: AppErrorCodes.updateInvalidPackage,
-        message: 'This update is not a GymPulse package and was discarded.',
+        message: 'This update is not a Mr. Gym package and was discarded.',
       );
     }
     if (identity.versionCode != prepared.info.versionCode ||
@@ -279,7 +279,7 @@ class AppUpdateService {
       await install.openInstallPermissionSettings();
       throw AppException(
         code: AppErrorCodes.updatePermissionRequired,
-        message: 'Allow GymPulse to install updates, then tap Update again.',
+        message: 'Allow Mr. Gym to install updates, then tap Update again.',
       );
     }
 
@@ -322,7 +322,7 @@ class AppUpdateService {
         : (_cacheDirectory ?? Directory.systemTemp);
     final updates = Directory(p.join(dir.path, 'updates'));
     updates.createSync(recursive: true);
-    return File(p.join(updates.path, 'GymPulse-update.apk'));
+    return File(p.join(updates.path, 'Mr-Gym-update.apk'));
   }
 
   Future<void> _deleteQuietly(File file) async {

@@ -1,9 +1,0 @@
-external_member_id,first_name,last_name,phone,email,status
-M-DECLINE,Sara,Khan,+923001111001,sara.khan@example.com,active
-M-LOYAL,Omar,Ali,+923001111002,omar.ali@example.com,active
-M-INACTIVE,Nadia,Hussain,+923001111003,nadia.hussain@example.com,active
-M-NEW,Bilal,Ahmed,+923001111004,bilal.ahmed@example.com,active
-M-EXPIRE,Fatima,Noor,+923001111005,fatima.noor@example.com,active
-M-CANCEL,Usman,Tariq,+923001111006,usman.tariq@example.com,active
-M-RENEW,Zainab,Iqbal,+923001111007,zainab.iqbal@example.com,active
-M-TRIAL,Ayesha,Malik,+923001111008,ayesha.malik@example.com,active

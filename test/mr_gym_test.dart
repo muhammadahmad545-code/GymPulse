@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gympulse/core/errors/app_exception.dart';
-import 'package:gympulse/data/db/app_database.dart';
-import 'package:gympulse/data/repositories/local_attendance_repository.dart';
-import 'package:gympulse/data/repositories/local_follow_up_repository.dart';
-import 'package:gympulse/data/repositories/local_location_repository.dart';
-import 'package:gympulse/data/repositories/local_member_repository.dart';
-import 'package:gympulse/data/repositories/local_membership_repository.dart';
-import 'package:gympulse/data/repositories/local_organization_repository.dart';
-import 'package:gympulse/domain/services/fee_cycle.dart';
-import 'package:gympulse/domain/services/gym_ops_service.dart';
-import 'package:gympulse/domain/services/retention_service.dart';
-import 'package:gympulse/domain/services/workspace_service.dart';
+import 'package:mr_gym/core/errors/app_exception.dart';
+import 'package:mr_gym/data/db/app_database.dart';
+import 'package:mr_gym/data/repositories/local_attendance_repository.dart';
+import 'package:mr_gym/data/repositories/local_follow_up_repository.dart';
+import 'package:mr_gym/data/repositories/local_location_repository.dart';
+import 'package:mr_gym/data/repositories/local_member_repository.dart';
+import 'package:mr_gym/data/repositories/local_membership_repository.dart';
+import 'package:mr_gym/data/repositories/local_organization_repository.dart';
+import 'package:mr_gym/domain/services/fee_cycle.dart';
+import 'package:mr_gym/domain/services/gym_ops_service.dart';
+import 'package:mr_gym/domain/services/retention_service.dart';
+import 'package:mr_gym/domain/services/workspace_service.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 
 void main() {

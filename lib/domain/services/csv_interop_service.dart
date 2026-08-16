@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 
-import '../../core/errors/app_exception.dart';
 import '../../data/db/app_database.dart';
 import '../../data/repositories/local_attendance_repository.dart';
 import '../../data/repositories/local_member_repository.dart';
@@ -70,45 +69,6 @@ class CsvInteropService {
       );
     }
     return out.toString();
-  }
-
-  Future<int> importMembers({
-    required Workspace workspace,
-    required String csv,
-  }) async {
-    final lines = csv.split(RegExp(r'\r?\n')).where((l) => l.trim().isNotEmpty);
-    if (lines.isEmpty) {
-      throw AppException(
-        code: AppErrorCodes.importFailed,
-        message: 'The member CSV is empty.',
-      );
-    }
-    final header = lines.first.toLowerCase();
-    if (!header.contains('first_name')) {
-      throw AppException(
-        code: AppErrorCodes.importFailed,
-        message: 'Member CSV must include a first_name column.',
-      );
-    }
-    var created = 0;
-    for (final line in lines.skip(1)) {
-      final cols = _split(line);
-      if (cols.isEmpty || cols[0].trim().isEmpty && cols.length < 2) continue;
-      final first = cols.length > 1 ? cols[1].trim() : cols[0].trim();
-      if (first.isEmpty) continue;
-      await _members.create(
-        organizationId: workspace.organization.id,
-        locationId: workspace.location.id,
-        firstName: first,
-        lastName: cols.length > 2 ? cols[2] : '',
-        externalMemberId: cols.isNotEmpty ? cols[0] : null,
-        phone: cols.length > 3 ? cols[3] : null,
-        email: cols.length > 4 ? cols[4] : null,
-        status: cols.length > 5 && cols[5].isNotEmpty ? cols[5] : 'active',
-      );
-      created += 1;
-    }
-    return created;
   }
 
   Future<String> exportTrials(Workspace workspace) async {
@@ -200,7 +160,4 @@ class CsvInteropService {
     }
     return raw;
   }
-
-  List<String> _split(String line) =>
-      line.split(',').map((e) => e.trim()).toList();
 }

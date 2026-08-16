@@ -56,7 +56,7 @@ class BackupService {
        _uuid = uuid ?? const Uuid();
 
   static const forgottenPasswordWarning =
-      'If you forget this backup password, this backup cannot be recovered. GymPulse cannot reset it.';
+      'If you forget this backup password, this backup cannot be recovered. Mr. Gym cannot reset it.';
   static const lastBackupPathKey = 'last_backup_path';
 
   final DatabaseSession _session;
@@ -207,7 +207,7 @@ class BackupService {
       package['sha256'] = _crypto.sha256Hex(Uint8List.fromList(plaintext));
 
       final fileName =
-          'gympulse-backup-${now.toIso8601String().replaceAll(':', '')}.gympulse-backup';
+          'mr-gym-backup-${now.toIso8601String().replaceAll(':', '')}.mrgym-backup';
       outFile = File(p.join(backupDir.path, fileName));
 
       final encoded = utf8.encode(jsonEncode(package));
@@ -308,7 +308,7 @@ class BackupService {
         throw AppException(
           code: AppErrorCodes.backupIncompatibleVersion,
           message:
-              'This backup was created by an incompatible GymPulse version.',
+              'This backup was created by an incompatible Mr. Gym version.',
         );
       }
 

@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gympulse/core/errors/app_exception.dart';
-import 'package:gympulse/updates/app_update_service.dart';
-import 'package:gympulse/updates/release_metadata.dart';
+import 'package:mr_gym/core/errors/app_exception.dart';
+import 'package:mr_gym/updates/app_update_service.dart';
+import 'package:mr_gym/updates/release_metadata.dart';
 import 'package:path/path.dart' as p;
 
 const _owner = 'test-owner';
-const _repo = 'GymPulse';
+const _repo = 'Mr-Gym';
 const _validSha =
     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const _validUrl =
-    'https://github.com/test-owner/GymPulse/releases/download/v9.0.0/GymPulse-9.0.0.apk';
+    'https://github.com/test-owner/Mr-Gym/releases/download/v9.0.0/Mr-Gym-9.0.0.apk';
 
 AppReleaseInfo _info({
   String versionName = '9.0.0',
@@ -60,7 +60,7 @@ void main() {
         () => parseAndValidateReleaseMetadata(
           decoded: _info(
             apkUrl:
-                'http://github.com/test-owner/GymPulse/releases/download/v1/a.apk',
+                'http://github.com/test-owner/Mr-Gym/releases/download/v1/a.apk',
           ).toJson(),
           owner: _owner,
           repo: _repo,
@@ -77,7 +77,7 @@ void main() {
         () => parseAndValidateReleaseMetadata(
           decoded: _info(
             apkUrl:
-                'https://evil.example/test-owner/GymPulse/releases/download/v1/a.apk',
+                'https://evil.example/test-owner/Mr-Gym/releases/download/v1/a.apk',
           ).toJson(),
           owner: _owner,
           repo: _repo,
@@ -88,7 +88,7 @@ void main() {
         () => parseAndValidateReleaseMetadata(
           decoded: _info(
             apkUrl:
-                'https://github.com/other/GymPulse/releases/download/v1/a.apk',
+                'https://github.com/other/Mr-Gym/releases/download/v1/a.apk',
           ).toJson(),
           owner: _owner,
           repo: _repo,
@@ -111,7 +111,7 @@ void main() {
       final service = AppUpdateService(
         provider: _FakeProvider(_info(versionCode: 3)),
         currentVersionCode: 3,
-        applicationId: 'com.gympulse.app',
+        applicationId: 'com.mrgym.app',
         githubOwner: _owner,
         githubRepo: _repo,
       );
@@ -122,7 +122,7 @@ void main() {
       final service = AppUpdateService(
         provider: _FakeProvider(_info(versionCode: 4)),
         currentVersionCode: 3,
-        applicationId: 'com.gympulse.app',
+        applicationId: 'com.mrgym.app',
         githubOwner: _owner,
         githubRepo: _repo,
       );
@@ -133,7 +133,7 @@ void main() {
       final service = AppUpdateService(
         provider: _FakeProvider(_info()),
         currentVersionCode: 1,
-        applicationId: 'com.gympulse.app',
+        applicationId: 'com.mrgym.app',
         githubOwner: '',
         githubRepo: _repo,
       );
@@ -151,7 +151,7 @@ void main() {
         info: _info(sha256: digest),
         downloader: _FakeDownloader(bytes),
         inspector: const _FakeInspector(
-          packageName: 'com.gympulse.app',
+          packageName: 'com.mrgym.app',
           versionCode: 90,
         ),
         installer: installer,
@@ -168,7 +168,7 @@ void main() {
         cache: temp,
         downloader: _FakeDownloader([1, 2, 3]),
         inspector: const _FakeInspector(
-          packageName: 'com.gympulse.app',
+          packageName: 'com.mrgym.app',
           versionCode: 90,
         ),
         installer: installer,
@@ -187,7 +187,7 @@ void main() {
       expect(installer.installed, isFalse);
       expect(Directory(p.join(temp.path, 'updates')).existsSync(), isTrue);
       expect(
-        File(p.join(temp.path, 'updates', 'GymPulse-update.apk')).existsSync(),
+        File(p.join(temp.path, 'updates', 'Mr-Gym-update.apk')).existsSync(),
         isFalse,
       );
     });
@@ -226,7 +226,7 @@ void main() {
         currentVersionCode: 90,
         downloader: _FakeDownloader(bytes),
         inspector: const _FakeInspector(
-          packageName: 'com.gympulse.app',
+          packageName: 'com.mrgym.app',
           versionCode: 90,
         ),
         installer: installer,
@@ -246,7 +246,7 @@ void main() {
         cache: temp,
         downloader: _FakeDownloader(bytes),
         inspector: const _FakeInspector(
-          packageName: 'com.gympulse.app',
+          packageName: 'com.mrgym.app',
           versionCode: 89,
         ),
         installer: installer,
@@ -270,7 +270,7 @@ void main() {
         cache: temp,
         downloader: _FailingDownloader(),
         inspector: const _FakeInspector(
-          packageName: 'com.gympulse.app',
+          packageName: 'com.mrgym.app',
           versionCode: 90,
         ),
         installer: installer,
@@ -295,7 +295,7 @@ void main() {
         cache: temp,
         downloader: _FakeDownloader([1, 2, 3], observeToken: true),
         inspector: const _FakeInspector(
-          packageName: 'com.gympulse.app',
+          packageName: 'com.mrgym.app',
           versionCode: 90,
         ),
         installer: installer,
@@ -319,7 +319,7 @@ void main() {
         cache: temp,
         downloader: _FakeDownloader([1]),
         inspector: const _FakeInspector(
-          packageName: 'com.gympulse.app',
+          packageName: 'com.mrgym.app',
           versionCode: 90,
         ),
         installer: installer,
@@ -384,7 +384,7 @@ AppUpdateService _service({
   return AppUpdateService(
     provider: _FakeProvider(info ?? _info()),
     currentVersionCode: currentVersionCode,
-    applicationId: 'com.gympulse.app',
+    applicationId: 'com.mrgym.app',
     githubOwner: _owner,
     githubRepo: _repo,
     downloader: downloader,

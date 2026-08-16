@@ -1,4 +1,4 @@
-package com.gympulse.app
+package com.mrgym.app
 
 import android.content.Intent
 import android.content.pm.PackageInfo
@@ -14,7 +14,7 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : FlutterActivity() {
-    private val channelName = "com.gympulse.app/updates"
+    private val channelName = "com.mrgym.app/updates"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

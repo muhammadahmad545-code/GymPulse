@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'gp_theme.dart';
 
-/// Official GymPulse mark. Same asset as the launcher icon.
+/// Official Mr. Gym mark. Same asset as the launcher icon.
 class GpLogo extends StatelessWidget {
   const GpLogo({super.key, this.size = 72, this.rounded = true});
 
-  static const assetPath = 'assets/branding/gympulse_icon.png';
+  static const assetPath = 'assets/branding/mr_gym_icon.png';
 
   final double size;
   final bool rounded;
@@ -29,7 +29,7 @@ class GpLogo extends StatelessWidget {
   }
 }
 
-/// Logo plus GymPulse wordmark for auth, setup, and Settings.
+/// Logo plus Mr. Gym wordmark for auth, setup, and Settings.
 class GpBrandHeader extends StatelessWidget {
   const GpBrandHeader({
     super.key,
@@ -60,7 +60,9 @@ class GpBrandHeader extends StatelessWidget {
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: const TextStyle(color: GpColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
               ],
             ),

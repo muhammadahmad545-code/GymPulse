@@ -95,6 +95,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       children: [
         GpBrandHeader(logoSize: 48, compact: true, subtitle: s.settingsTitle),
         const SizedBox(height: GpSpacing.lg),
+        Text(s.appearanceTitle, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: GpSpacing.sm),
+        SegmentedButton<ThemeMode>(
+          segments: [
+            ButtonSegment(
+              value: ThemeMode.dark,
+              label: Text(s.themeDark),
+              icon: const Icon(Icons.dark_mode_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.light,
+              label: Text(s.themeLight),
+              icon: const Icon(Icons.light_mode_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.system,
+              label: Text(s.themeSystem),
+              icon: const Icon(Icons.phone_android_outlined),
+            ),
+          ],
+          selected: {ref.watch(themeModeProvider)},
+          onSelectionChanged: (value) async {
+            final mode = value.first;
+            ref.read(themeModeProvider.notifier).state = mode;
+            await ref.read(appearanceServiceProvider).save(mode);
+          },
+        ),
+        const SizedBox(height: GpSpacing.lg),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(s.backupRestore),

@@ -1,16 +1,16 @@
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gympulse/core/logging/app_logger.dart';
-import 'package:gympulse/data/db/app_database.dart';
-import 'package:gympulse/data/repositories/local_attendance_repository.dart';
-import 'package:gympulse/data/repositories/local_follow_up_repository.dart';
-import 'package:gympulse/data/repositories/local_location_repository.dart';
-import 'package:gympulse/data/repositories/local_member_repository.dart';
-import 'package:gympulse/data/repositories/local_membership_repository.dart';
-import 'package:gympulse/data/repositories/local_organization_repository.dart';
-import 'package:gympulse/domain/services/attendance_ingest_service.dart';
-import 'package:gympulse/domain/services/retention_service.dart';
-import 'package:gympulse/domain/services/workspace_service.dart';
+import 'package:mr_gym/data/db/app_database.dart';
+import 'package:mr_gym/data/repositories/local_attendance_repository.dart';
+import 'package:mr_gym/data/repositories/local_follow_up_repository.dart';
+import 'package:mr_gym/data/repositories/local_location_repository.dart';
+import 'package:mr_gym/data/repositories/local_member_repository.dart';
+import 'package:mr_gym/data/repositories/local_membership_repository.dart';
+import 'package:mr_gym/data/repositories/local_organization_repository.dart';
+import 'package:mr_gym/domain/services/attendance_ingest_service.dart';
+import 'package:mr_gym/domain/services/gym_ops_service.dart';
+import 'package:mr_gym/domain/services/retention_service.dart';
+import 'package:mr_gym/domain/services/workspace_service.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 
 void main() {
@@ -18,6 +18,7 @@ void main() {
 
   late AppDatabase db;
   late WorkspaceService workspaceService;
+  late GymOpsService ops;
   late AttendanceIngestService ingest;
   late RetentionService retention;
   late LocalMemberRepository members;
@@ -33,11 +34,14 @@ void main() {
       organizations: LocalOrganizationRepository(db: db),
       locations: LocalLocationRepository(db: db),
     );
-    ingest = AttendanceIngestService(
-      attendance: attendance,
+    ops = GymOpsService(
+      db: db,
       members: members,
-      logger: AppLogger(sink: (_, __, {error, stackTrace}) {}),
+      memberships: memberships,
+      attendance: attendance,
+      followUps: LocalFollowUpRepository(db: db),
     );
+    ingest = AttendanceIngestService(attendance: attendance);
     retention = RetentionService(
       db: db,
       members: members,
@@ -71,25 +75,27 @@ void main() {
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
       firstName: 'Ada',
-      externalMemberId: 'M-1',
+      phone: '03001234567',
     );
-    final rows = StringBuffer(
-      'external_event_id,external_member_id,occurred_at,event_type\n',
-    );
-    var n = 0;
     for (var week = 10; week >= 3; week--) {
       for (var visit = 0; visit < 4; visit++) {
-        n++;
         final day = DateTime.utc(
           2026,
           8,
           15,
         ).subtract(Duration(days: week * 7 - visit));
-        rows.writeln('e$n,M-1,${day.toIso8601String()},check_in');
+        await ops.markAttendance(
+          workspace: workspace,
+          memberId: member.id,
+          nowUtc: day,
+        );
       }
     }
-    rows.writeln('e-recent,M-1,2026-08-14T10:00:00Z,check_in');
-    await ingest.importCsv(workspace: workspace, csv: rows.toString());
+    await ops.markAttendance(
+      workspace: workspace,
+      memberId: member.id,
+      nowUtc: DateTime.utc(2026, 8, 14, 10),
+    );
     final events = await LocalAttendanceRepository(
       db: db,
     ).list(organizationId: workspace.organization.id, memberId: member.id);
@@ -114,7 +120,7 @@ void main() {
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
       firstName: 'Ada',
-      externalMemberId: 'M-2',
+      phone: '03007654321',
     );
     await memberships.create(
       organizationId: workspace.organization.id,
@@ -124,9 +130,11 @@ void main() {
       endAt: DateTime.utc(2026, 8, 20),
       status: 'active',
     );
-    const csv =
-        'external_event_id,external_member_id,occurred_at,event_type\ne1,M-2,2026-07-01T10:00:00Z,check_in\n';
-    await ingest.importCsv(workspace: workspace, csv: csv);
+    await ops.markAttendance(
+      workspace: workspace,
+      memberId: member.id,
+      nowUtc: DateTime.utc(2026, 7, 1, 10),
+    );
     final events = await LocalAttendanceRepository(
       db: db,
     ).list(organizationId: workspace.organization.id, memberId: member.id);
@@ -230,7 +238,7 @@ void main() {
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
       firstName: 'Ada',
-      externalMemberId: 'M-9',
+      phone: '03009998877',
     );
     await memberships.create(
       organizationId: workspace.organization.id,
@@ -240,22 +248,20 @@ void main() {
       endAt: DateTime.utc(2026, 8, 16),
       status: 'active',
     );
-    final rows = StringBuffer(
-      'external_event_id,external_member_id,occurred_at,event_type\n',
-    );
-    var n = 0;
     for (var week = 10; week >= 3; week--) {
       for (var visit = 0; visit < 4; visit++) {
-        n++;
         final day = DateTime.utc(
           2026,
           8,
           15,
-        ).subtract(Duration(days: week * 7));
-        rows.writeln('r$n,M-9,${day.toIso8601String()},check_in');
+        ).subtract(Duration(days: week * 7 - visit));
+        await ops.markAttendance(
+          workspace: workspace,
+          memberId: member.id,
+          nowUtc: day,
+        );
       }
     }
-    await ingest.importCsv(workspace: workspace, csv: rows.toString());
     final health = await ingest.importHealth(workspace);
     final snap = await retention.snapshot(
       workspace: workspace,

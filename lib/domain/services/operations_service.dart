@@ -576,10 +576,10 @@ class OperationsService {
     final actual = inRange.length;
     final difference = actual - expected;
     final explanation = difference == 0
-        ? 'GymPulse count matches the source count for this range.'
+        ? 'Mr. Gym count matches the source count for this range.'
         : difference < 0
-        ? 'GymPulse has ${-difference} fewer event(s) than the source count. Re-export and import the missing days.'
-        : 'GymPulse has $difference extra event(s). Check for duplicate source files.';
+        ? 'Mr. Gym has ${-difference} fewer event(s) than the source count.'
+        : 'Mr. Gym has $difference extra event(s).';
     return ReconciliationReport(
       expected: expected,
       actual: actual,

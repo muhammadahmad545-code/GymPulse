@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
@@ -20,7 +21,6 @@ import '../data/repositories/local_member_repository.dart';
 import '../data/repositories/local_membership_repository.dart';
 import '../data/repositories/local_organization_repository.dart';
 import '../data/security/keystore_secure_store.dart';
-import '../domain/attendance/attendance_source.dart';
 import '../domain/models/workspace.dart';
 import '../domain/repositories/audit_repository.dart';
 import '../domain/repositories/location_repository.dart';
@@ -37,6 +37,7 @@ import '../domain/services/operations_service.dart';
 import '../domain/services/ops_notifier.dart';
 import '../domain/services/retention_service.dart';
 import '../domain/services/security_service.dart';
+import '../domain/services/appearance_service.dart';
 import '../domain/services/gym_ops_service.dart';
 import '../domain/services/workspace_service.dart';
 import '../updates/android_update_platform.dart';
@@ -68,7 +69,7 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 final databasePathProvider = Provider<Future<String> Function()>((ref) {
   return () async {
     final dir = await getApplicationDocumentsDirectory();
-    return p.join(dir.path, 'gympulse.sqlite');
+    return p.join(dir.path, 'mr_gym.sqlite');
   };
 });
 
@@ -115,8 +116,6 @@ final attendanceIngestServiceProvider = Provider<AttendanceIngestService>((
 ) {
   return AttendanceIngestService(
     attendance: ref.watch(attendanceRepositoryProvider),
-    members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
-    logger: ref.watch(appLoggerProvider),
   );
 });
 
@@ -202,12 +201,6 @@ final backupServiceProvider = Provider<BackupService>((ref) {
   );
 });
 
-final syncPortProvider = Provider<SyncPort>((ref) => DisabledSyncPort());
-
-final mockAttendanceSourceProvider = Provider<MockAttendanceSource>((ref) {
-  return MockAttendanceSource();
-});
-
 final appUpdateServiceProvider = Provider<AppUpdateService>((ref) {
   final config = ref.watch(appConfigProvider);
   final platform = AndroidUpdatePlatform();
@@ -239,6 +232,12 @@ final appUpdateServiceProvider = Provider<AppUpdateService>((ref) {
 final availableUpdateProvider = StateProvider<AppReleaseInfo?>((ref) => null);
 
 final pendingInstallProvider = StateProvider<AppReleaseInfo?>((ref) => null);
+
+final appearanceServiceProvider = Provider<AppearanceService>((ref) {
+  return AppearanceService(db: ref.watch(appDatabaseProvider));
+});
+
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
 
 final sessionUnlockedProvider = StateProvider<bool>((ref) => false);
 

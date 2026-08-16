@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 
-import 'app/gympulse_app.dart';
+import 'app/mr_gym_app.dart';
 import 'app/providers.dart';
 import 'core/logging/app_logger.dart';
 import 'data/db/app_database.dart';
@@ -29,7 +29,7 @@ Future<void> main() async {
         databaseSessionProvider.overrideWith((ref) => session),
         appLoggerProvider.overrideWithValue(logger),
       ],
-      child: const GymPulseApp(),
+      child: const MrGymApp(),
     ),
   );
 }
