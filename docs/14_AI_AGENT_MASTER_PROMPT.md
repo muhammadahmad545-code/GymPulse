@@ -1,3 +1,5 @@
+> **SUPERSEDED.** Do not follow this prompt for new work. The owner rebaselined the product to offline Mr. Gym with no AI. See [19_MR_GYM_FINAL.md](19_MR_GYM_FINAL.md).
+
 # MASTER PROMPT — BUILD GYMPULSE
 
 You are the principal software architect, senior Flutter engineer, product designer, QA engineer, security engineer and DevOps engineer responsible for building **GymPulse**.

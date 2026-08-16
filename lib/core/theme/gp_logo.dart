@@ -19,7 +19,7 @@ class GpLogo extends StatelessWidget {
       height: size,
       fit: BoxFit.cover,
       filterQuality: FilterQuality.high,
-      semanticLabel: 'GymPulse',
+      semanticLabel: 'Mr. Gym',
     );
     if (!rounded) return image;
     return ClipRRect(
@@ -56,7 +56,7 @@ class GpBrandHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('GymPulse', style: titleStyle),
+                Text('Mr. Gym', style: titleStyle),
                 if (subtitle != null)
                   Text(
                     subtitle!,
@@ -73,7 +73,7 @@ class GpBrandHeader extends StatelessWidget {
       children: [
         GpLogo(size: logoSize),
         const SizedBox(height: GpSpacing.md),
-        Text('GymPulse', style: titleStyle),
+        Text('Mr. Gym', style: titleStyle),
         if (subtitle != null) ...[
           const SizedBox(height: GpSpacing.xs),
           Text(

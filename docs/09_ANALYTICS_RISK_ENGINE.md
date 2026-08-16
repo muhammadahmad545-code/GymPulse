@@ -1,3 +1,5 @@
+> Risk scoring remains **deterministic and explainable**. Anything labeled AI/ML in this draft is obsolete. See [19_MR_GYM_FINAL.md](19_MR_GYM_FINAL.md).
+
 # GymPulse — Analytics & Risk Engine Specification
 
 ## 1. Principle

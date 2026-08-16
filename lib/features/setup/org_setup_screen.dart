@@ -16,12 +16,12 @@ class OrgSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _OrgSetupScreenState extends ConsumerState<OrgSetupScreen> {
-  final _org = TextEditingController();
-  final _location = TextEditingController();
+  final _org = TextEditingController(text: 'Mr. Gym');
+  final _location = TextEditingController(text: 'Main');
   final _phone = TextEditingController();
   final _capacity = TextEditingController();
   CountryOption _country = LocaleCatalogs.countries.firstWhere(
-    (c) => c.code == 'US',
+    (c) => c.code == 'PK',
   );
   late String _timezone = _country.timezone;
   late String _currency = _country.currency;
@@ -87,11 +87,6 @@ class _OrgSetupScreenState extends ConsumerState<OrgSetupScreen> {
             TextField(
               controller: _org,
               decoration: InputDecoration(labelText: s.gymName),
-            ),
-            const SizedBox(height: GpSpacing.md),
-            TextField(
-              controller: _location,
-              decoration: InputDecoration(labelText: s.locationName),
             ),
             const SizedBox(height: GpSpacing.md),
             DropdownButtonFormField<CountryOption>(

@@ -54,7 +54,7 @@ class _NotificationSettingsScreenState
         padding: const EdgeInsets.all(GpSpacing.lg),
         children: [
           Text(
-            'Local only. GymPulse does not use cloud push.',
+            'Local only. Mr. Gym does not use cloud push.',
             style: const TextStyle(color: GpColors.textSecondary),
           ),
           SwitchListTile(
@@ -65,9 +65,9 @@ class _NotificationSettingsScreenState
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(s.notifyImportStale),
-            value: _prefs[OpsNotifyKeys.importStale] ?? true,
-            onChanged: (v) => _set(OpsNotifyKeys.importStale, v),
+            title: Text(s.notifyFeeReminders),
+            value: _prefs[OpsNotifyKeys.feeReminders] ?? true,
+            onChanged: (v) => _set(OpsNotifyKeys.feeReminders, v),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,

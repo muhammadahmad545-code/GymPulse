@@ -23,13 +23,25 @@ class LocalMemberRepository implements MemberRepository {
     String? phone,
     String? email,
     String status = 'active',
+    DateTime? joinedAt,
+    int? feeDay,
+    String? gender,
+    String? notes,
+    bool whatsappEnabled = true,
   }) async {
     if (firstName.trim().isEmpty) {
       throw AppException(
         code: AppErrorCodes.validationInvalidField,
-        message: 'First name is required.',
+        message: 'Full name is required.',
       );
     }
+    if (whatsappEnabled && phone != null && _digits(phone).length < 10) {
+      throw AppException(
+        code: AppErrorCodes.validationInvalidField,
+        message: 'WhatsApp number is required (at least 10 digits).',
+      );
+    }
+    final join = joinedAt ?? DateTime.now();
     await _requireLocation(organizationId, locationId);
     final now = DateTime.now().toUtc();
     final id = _uuid.v4();
@@ -46,6 +58,11 @@ class LocalMemberRepository implements MemberRepository {
             phone: Value(_emptyToNull(phone)),
             email: Value(_emptyToNull(email)),
             status: Value(status),
+            joinedAt: Value(join.toUtc()),
+            feeDay: Value(feeDay ?? join.day),
+            gender: Value(_emptyToNull(gender)),
+            notes: Value(_emptyToNull(notes)),
+            whatsappEnabled: Value(whatsappEnabled),
             createdAt: now,
             updatedAt: now,
           ),
@@ -84,6 +101,11 @@ class LocalMemberRepository implements MemberRepository {
     String? email,
     String? status,
     String? externalMemberId,
+    DateTime? joinedAt,
+    int? feeDay,
+    String? gender,
+    String? notes,
+    bool? whatsappEnabled,
   }) async {
     final existing = await get(organizationId: organizationId, id: id);
     if (existing == null) {
@@ -113,6 +135,19 @@ class LocalMemberRepository implements MemberRepository {
             externalMemberId: externalMemberId == null
                 ? const Value.absent()
                 : Value(_emptyToNull(externalMemberId)),
+            joinedAt: joinedAt == null
+                ? const Value.absent()
+                : Value(joinedAt.toUtc()),
+            feeDay: feeDay == null ? const Value.absent() : Value(feeDay),
+            gender: gender == null
+                ? const Value.absent()
+                : Value(_emptyToNull(gender)),
+            notes: notes == null
+                ? const Value.absent()
+                : Value(_emptyToNull(notes)),
+            whatsappEnabled: whatsappEnabled == null
+                ? const Value.absent()
+                : Value(whatsappEnabled),
             updatedAt: Value(DateTime.now().toUtc()),
           ),
         );
@@ -137,6 +172,9 @@ class LocalMemberRepository implements MemberRepository {
       );
     }
   }
+
+  String _digits(String? value) =>
+      (value ?? '').replaceAll(RegExp(r'[^\d]'), '');
 
   String? _emptyToNull(String? value) {
     if (value == null) return null;

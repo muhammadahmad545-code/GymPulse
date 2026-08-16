@@ -6,6 +6,7 @@ import '../actions/actions_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../home/home_screen.dart';
 import '../members/members_screen.dart';
+import '../search/search_screen.dart';
 import '../settings/app_update_flow.dart';
 import '../settings/settings_screen.dart';
 
@@ -64,7 +65,7 @@ class _AppShellState extends ConsumerState<AppShell>
           .show(
             id: 20,
             title: ref.read(appStringsProvider).updateAvailable,
-            body: 'GymPulse ${update.versionName} is ready to install.',
+            body: 'Mr. Gym ${update.versionName} is ready to install.',
           );
       if (!mounted) return;
       await showAppUpdateSheet(context: context, ref: ref, info: update);
@@ -85,6 +86,20 @@ class _AppShellState extends ConsumerState<AppShell>
     ];
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(s.appName),
+        actions: [
+          IconButton(
+            tooltip: s.searchEverything,
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+            },
+            icon: const Icon(Icons.search),
+          ),
+        ],
+      ),
       body: SafeArea(child: pages[_index]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,

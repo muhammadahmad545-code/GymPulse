@@ -13,16 +13,42 @@ class LocalAttendanceRepository {
   final AppDatabase _db;
   final Uuid _uuid;
 
+  Future<AttendanceSource> ensureManualSource({
+    required String organizationId,
+    required String locationId,
+  }) {
+    return _ensureSource(
+      organizationId: organizationId,
+      locationId: locationId,
+      type: 'manual',
+      vendor: 'in-app',
+    );
+  }
+
   Future<AttendanceSource> ensureCsvSource({
     required String organizationId,
     required String locationId,
+  }) {
+    return _ensureSource(
+      organizationId: organizationId,
+      locationId: locationId,
+      type: 'csv',
+      vendor: 'csv-file',
+    );
+  }
+
+  Future<AttendanceSource> _ensureSource({
+    required String organizationId,
+    required String locationId,
+    required String type,
+    required String vendor,
   }) async {
     final existing =
         await (_db.select(_db.attendanceSources)..where(
               (t) =>
                   t.organizationId.equals(organizationId) &
                   t.locationId.equals(locationId) &
-                  t.type.equals('csv'),
+                  t.type.equals(type),
             ))
             .getSingleOrNull();
     if (existing != null) return existing;
@@ -35,8 +61,8 @@ class LocalAttendanceRepository {
             id: id,
             organizationId: organizationId,
             locationId: locationId,
-            type: 'csv',
-            vendor: const Value('csv-file'),
+            type: type,
+            vendor: Value(vendor),
             status: const Value('ready'),
             lastAttemptAt: Value(now),
           ),
@@ -49,13 +75,22 @@ class LocalAttendanceRepository {
   Future<AttendanceSource?> sourceFor({
     required String organizationId,
     required String locationId,
-  }) {
-    return (_db.select(_db.attendanceSources)..where(
-          (t) =>
-              t.organizationId.equals(organizationId) &
-              t.locationId.equals(locationId),
-        ))
-        .getSingleOrNull();
+  }) async {
+    final rows =
+        await (_db.select(_db.attendanceSources)..where(
+              (t) =>
+                  t.organizationId.equals(organizationId) &
+                  t.locationId.equals(locationId),
+            ))
+            .get();
+    if (rows.isEmpty) return null;
+    AttendanceSource? manual;
+    AttendanceSource? ready;
+    for (final row in rows) {
+      if (row.type == 'manual') manual = row;
+      if (row.lastSuccessAt != null) ready = row;
+    }
+    return manual ?? ready ?? rows.first;
   }
 
   Future<void> markSourceAttempt({

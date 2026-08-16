@@ -1,3 +1,5 @@
+> **SUPERSEDED.** Phase 4/5 and later GymPulse phases are cancelled. The final product is Mr. Gym v1.0.0. See [18_PROGRESS_TRACKER.md](18_PROGRESS_TRACKER.md).
+
 # GymPulse — Product Roadmap
 
 ## Cost constraint (all phases)

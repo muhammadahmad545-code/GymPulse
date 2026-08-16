@@ -150,7 +150,14 @@ class OpsNotifyKeys {
   static const importStale = 'import_stale';
   static const highRisk = 'high_risk';
   static const expiryQueue = 'expiry_queue';
-  static const all = [dailySummary, importStale, highRisk, expiryQueue];
+  static const feeReminders = 'fee_reminders';
+  static const all = [
+    dailySummary,
+    importStale,
+    highRisk,
+    expiryQueue,
+    feeReminders,
+  ];
 }
 
 /// On-device operations intelligence. Missing attendance is never treated as zero.

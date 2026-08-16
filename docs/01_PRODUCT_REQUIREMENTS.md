@@ -1,3 +1,5 @@
+> **SUPERSEDED.** The current product is **Mr. Gym**. See [00_README.md](00_README.md) and [19_MR_GYM_FINAL.md](19_MR_GYM_FINAL.md). Multi-gym SaaS, cloud, AI, and biometric attendance are not part of the product.
+
 # GymPulse — Product Requirements Document (PRD)
 
 ## 1. Product overview

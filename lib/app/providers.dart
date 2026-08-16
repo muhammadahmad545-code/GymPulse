@@ -37,6 +37,7 @@ import '../domain/services/operations_service.dart';
 import '../domain/services/ops_notifier.dart';
 import '../domain/services/retention_service.dart';
 import '../domain/services/security_service.dart';
+import '../domain/services/gym_ops_service.dart';
 import '../domain/services/workspace_service.dart';
 import '../updates/android_update_platform.dart';
 import '../updates/apk_http_downloader.dart';
@@ -121,6 +122,16 @@ final attendanceIngestServiceProvider = Provider<AttendanceIngestService>((
 
 final retentionServiceProvider = Provider<RetentionService>((ref) {
   return RetentionService(
+    db: ref.watch(appDatabaseProvider),
+    members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
+    memberships: LocalMembershipRepository(db: ref.watch(appDatabaseProvider)),
+    attendance: ref.watch(attendanceRepositoryProvider),
+    followUps: ref.watch(followUpRepositoryProvider),
+  );
+});
+
+final gymOpsServiceProvider = Provider<GymOpsService>((ref) {
+  return GymOpsService(
     db: ref.watch(appDatabaseProvider),
     members: LocalMemberRepository(db: ref.watch(appDatabaseProvider)),
     memberships: LocalMembershipRepository(db: ref.watch(appDatabaseProvider)),

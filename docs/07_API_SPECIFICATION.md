@@ -1,3 +1,5 @@
+> **SUPERSEDED.** Mr. Gym has no backend API. Local services only. See [19_MR_GYM_FINAL.md](19_MR_GYM_FINAL.md).
+
 # GymPulse — Application Service Contracts
 
 ## Purpose

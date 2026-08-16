@@ -11,6 +11,7 @@ import '../../data/repositories/local_member_repository.dart';
 import '../../data/repositories/local_membership_repository.dart';
 import '../attendance/attendance_source.dart' hide AttendanceEvent;
 import '../models/workspace.dart';
+import 'fee_cycle.dart';
 
 class RiskWeights {
   const RiskWeights({
@@ -740,12 +741,13 @@ class RetentionService {
         convertedAt: Value(now),
       ),
     );
+    final end = FeeCycle().membershipEndFromStart(now.toLocal());
     await _memberships.create(
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
       memberId: trial.memberId,
       startAt: now,
-      endAt: now.add(const Duration(days: 30)),
+      endAt: DateTime.utc(end.year, end.month, end.day, 23, 59, 59),
       status: 'active',
       currencyCode: workspace.location.currencyCode,
     );
@@ -760,7 +762,15 @@ class RetentionService {
     required String reasonCode,
     String? reasonText,
   }) async {
-    if (!CancellationReasons.defaults.containsKey(reasonCode)) {
+    final reasons =
+        await (_db.select(_db.cancellationReasons)..where(
+              (t) =>
+                  t.organizationId.equals(workspace.organization.id) &
+                  t.code.equals(reasonCode),
+            ))
+            .get();
+    if (reasons.isEmpty &&
+        !CancellationReasons.defaults.containsKey(reasonCode)) {
       throw AppException(
         code: AppErrorCodes.validationInvalidField,
         message: 'Choose a cancellation reason.',
@@ -821,12 +831,14 @@ class RetentionService {
       status: 'renewed',
     );
     final now = DateTime.now().toUtc();
+    final start = now;
+    final end = FeeCycle().membershipEndFromStart(start.toLocal());
     return _memberships.create(
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
       memberId: current.memberId,
-      startAt: now,
-      endAt: now.add(const Duration(days: 30)),
+      startAt: start,
+      endAt: DateTime.utc(end.year, end.month, end.day, 23, 59, 59),
       status: 'active',
       currencyCode: workspace.location.currencyCode,
     );

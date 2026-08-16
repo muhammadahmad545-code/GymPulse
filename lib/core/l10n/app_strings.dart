@@ -2,9 +2,8 @@
 class AppStrings {
   const AppStrings();
 
-  String get appName => 'GymPulse';
-  String get tagline =>
-      'Know who you are about to lose — before you lose them.';
+  String get appName => 'Mr. Gym';
+  String get tagline => 'What does Mr. Gym need to handle today?';
 
   String get navHome => 'Home';
   String get navMembers => 'Members';
@@ -12,7 +11,7 @@ class AppStrings {
   String get navAnalytics => 'Analytics';
   String get navSettings => 'Settings';
 
-  String get unlockTitle => 'Unlock GymPulse';
+  String get unlockTitle => 'Unlock Mr. Gym';
   String get unlockHint => 'Enter your app PIN';
   String get unlockAction => 'Unlock';
   String get incorrectPin => 'Incorrect PIN. Try again.';
@@ -21,7 +20,7 @@ class AppStrings {
 
   String get setupPinTitle => 'Create your app PIN';
   String get setupPinSubtitle =>
-      'Your data stays on this phone. Protect GymPulse with a PIN.';
+      'Your data stays on this phone. Protect Mr. Gym with a PIN.';
   String get pinLabel => 'PIN (min 6 digits)';
   String get pinConfirmLabel => 'Confirm PIN';
   String get pinMismatch => 'PINs do not match.';
@@ -42,7 +41,7 @@ class AppStrings {
   String get backupStaleWarning =>
       'Your backup is stale. Create an encrypted backup now.';
   String get forgottenBackupPasswordWarning =>
-      'If you forget this backup password, this backup cannot be recovered. GymPulse cannot reset it.';
+      'If you forget this backup password, this backup cannot be recovered. Mr. Gym cannot reset it.';
   String get restoreBackup => 'Restore backup';
   String get restoreBackupSubtitle =>
       'Replace local data with an encrypted backup. Failed restore will not change existing data.';
@@ -53,7 +52,7 @@ class AppStrings {
   String get forgotPin => 'Forgot PIN?';
   String get factoryReset => 'Factory reset';
   String get factoryResetWarning =>
-      'This permanently deletes all GymPulse data on this phone. Type RESET to confirm. A backup cannot be recovered without its password.';
+      'This permanently deletes all Mr. Gym data on this phone. Type RESET to confirm. A backup cannot be recovered without its password.';
   String get factoryResetConfirmLabel => 'Type RESET to confirm';
   String get backupCreated => 'Encrypted backup created.';
   String get restoreSucceeded =>
@@ -62,11 +61,45 @@ class AppStrings {
   String get interval14 => 'Every 14 days';
   String get interval30 => 'Every 30 days';
 
-  String get setupGymTitle => 'Set up your gym';
+  String get setupGymTitle => 'Set up Mr. Gym';
   String get setupGymSubtitle =>
       'Country, timezone, and currency stay on this phone and can be changed later.';
   String get gymName => 'Gym name';
   String get locationName => 'Location name';
+  String get fullName => 'Full name';
+  String get whatsappNumber => 'WhatsApp contact number';
+  String get joiningFeeDate => 'Joining Date / Fee Date';
+  String get joiningFeeDateHelp =>
+      'This date starts the monthly membership reminder cycle. The next fee is the same calendar day next month.';
+  String get genderOptional => 'Gender (optional)';
+  String get notesOptional => 'Notes (optional)';
+  String get markAttendance => 'Mark Attendance';
+  String get attendanceAlreadyMarked => 'Attendance already marked today.';
+  String get recordAnotherVisit => 'Record another visit';
+  String get todaysAttendance => "Today's attendance";
+  String get feesDueToday => 'Fees due today';
+  String get feesDueIn3Days => 'Fees due in 3 days';
+  String get overdueMembers => 'Overdue / expired';
+  String get recentAttendance => 'Recent attendance';
+  String get notAttendedRecently => 'Have not attended recently';
+  String get nextFeeDate => 'Next fee date';
+  String get feeStatus => 'Fee status';
+  String get reminderHistory => 'Reminder history';
+  String get whatsappOpenedNotSent =>
+      'WhatsApp opened. Mr. Gym cannot confirm that the message was sent.';
+  String get searchEverything =>
+      'Search members, phone, attendance, follow-ups';
+  String get filterActive => 'Active';
+  String get filterInactive => 'Inactive';
+  String get filterDueSoon => 'Due soon';
+  String get filterOverdue => 'Overdue';
+  String get deactivateMember => 'Deactivate member';
+  String get cancellationReasons => 'Cancellation reasons';
+  String get exportMembers => 'Export members CSV';
+  String get exportFeeReminders => 'Export fee reminders CSV';
+  String get notifyFeeReminders => 'Fee reminders';
+  String get addMembership => 'Add monthly membership';
+  String get renewMembership => 'Renew one calendar month';
   String get country => 'Country';
   String get timezone => 'Timezone';
   String get currency => 'Currency';
@@ -152,8 +185,6 @@ class AppStrings {
   String get status => 'Status';
   String get membership => 'Membership';
   String get noMembership => 'No membership on file.';
-  String get addMembership => 'Add 30-day membership';
-  String get renewMembership => 'Renew 30 days (explicit)';
   String get contactMember => 'Contact member';
   String get whatsapp => 'WhatsApp';
   String get call => 'Call';
@@ -195,12 +226,12 @@ class AppStrings {
   String get upToDate => 'You are on the latest version.';
   String get downloadingUpdate => 'Downloading update…';
   String get installerLaunched =>
-      'Android will ask you to confirm installation. If you cancel, GymPulse stays on this version.';
+      'Android will ask you to confirm installation. If you cancel, Mr. Gym stays on this version.';
   String get updateCancelled => 'Update download cancelled.';
   String get updateCheckFailed =>
       'Could not check for updates. Check your connection and try again.';
   String get updatesNeedNetwork =>
-      'Checking for updates needs a network connection. GymPulse still works offline.';
+      'Checking for updates needs a network connection. Mr. Gym still works offline.';
 
   String lockoutCooldown(int seconds) =>
       'Too many attempts. Try again in ${seconds}s.';

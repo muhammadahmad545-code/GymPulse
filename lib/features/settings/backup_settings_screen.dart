@@ -149,29 +149,6 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
     }
   }
 
-  Future<void> _importMembers() async {
-    try {
-      final picked = await FilePicker.platform.pickFiles(type: FileType.any);
-      final path = picked?.files.single.path;
-      if (path == null) return;
-      final workspace = await ref.read(workspaceProvider.future);
-      if (workspace == null) return;
-      final created = await ref
-          .read(csvInteropServiceProvider)
-          .importMembers(
-            workspace: workspace,
-            csv: await File(path).readAsString(),
-          );
-      setState(
-        () => _info = '${ref.read(appStringsProvider).imported}: $created',
-      );
-    } on AppException catch (e) {
-      setState(() => _error = e.message);
-    } catch (_) {
-      setState(() => _error = ref.read(appStringsProvider).somethingWentWrong);
-    }
-  }
-
   Future<void> _saveReminder() async {
     try {
       await ref
@@ -278,11 +255,7 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
           Text(s.csvNotBackup, style: const TextStyle(color: GpColors.warning)),
           TextButton(
             onPressed: _busy ? null : _exportMembers,
-            child: Text(s.exportCsv),
-          ),
-          TextButton(
-            onPressed: _busy ? null : _importMembers,
-            child: Text(s.importMembersCsv),
+            child: Text(s.exportMembers),
           ),
           if (_error != null) ...[
             const SizedBox(height: GpSpacing.md),

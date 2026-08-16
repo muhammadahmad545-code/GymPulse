@@ -27,8 +27,8 @@ class AppConfig {
         defaultValue: 'GymPulse',
       ),
       applicationId: applicationIdValue,
-      versionName: '0.3.0',
-      versionCode: 7,
+      versionName: '1.0.0',
+      versionCode: 8,
     );
   }
 }

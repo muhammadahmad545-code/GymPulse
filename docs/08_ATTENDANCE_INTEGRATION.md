@@ -1,3 +1,5 @@
+> **SUPERSEDED.** Attendance is marked in-app. Biometric hardware and attendance import are not part of Mr. Gym. See [19_MR_GYM_FINAL.md](19_MR_GYM_FINAL.md).
+
 # GymPulse — Biometric Attendance Integration Specification
 
 ## 1. Critical principle

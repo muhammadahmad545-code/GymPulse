@@ -145,10 +145,14 @@ class WorkspaceService {
     int? capacity,
     String? gymPhone,
   }) async {
-    if (organizationName.trim().isEmpty || locationName.trim().isEmpty) {
+    final gymName = organizationName.trim().isEmpty
+        ? 'Mr. Gym'
+        : organizationName.trim();
+    final siteName = locationName.trim().isEmpty ? 'Main' : locationName.trim();
+    if (gymName.isEmpty) {
       throw AppException(
         code: AppErrorCodes.validationInvalidField,
-        message: 'Gym name and location name are required.',
+        message: 'Gym name is required.',
       );
     }
     if (await current() != null) {
@@ -158,13 +162,13 @@ class WorkspaceService {
       );
     }
     final org = await _organizations.create(
-      name: organizationName.trim(),
+      name: gymName,
       countryCode: countryCode,
       defaultCurrency: currencyCode,
     );
     final location = await _locations.create(
       organizationId: org.id,
-      name: locationName.trim(),
+      name: siteName,
       timezone: timezone,
       countryCode: countryCode,
       currencyCode: currencyCode,
@@ -181,6 +185,7 @@ class WorkspaceService {
           ),
         );
     await _seedTemplates(org.id, location.id, now);
+    await _seedCancellationReasons(org.id, now);
     await _db
         .into(_db.membershipPlans)
         .insert(
@@ -273,11 +278,13 @@ class WorkspaceService {
   ) async {
     const templates = {
       'expiry':
-          'Hi {{member_name}}, your membership at {{gym_name}} expires on {{expiry_date}}. Reply if you would like to renew.',
+          'Assalam-o-Alaikum {{member_name}},\n\nThis is a friendly reminder from Mr. Gym that your monthly gym fee is due on {{expiry_date}}.\n\nThank you,\nMr. Gym',
+      'fee_due_soon':
+          'Assalam-o-Alaikum {{member_name}},\n\nThis is a friendly reminder from Mr. Gym that your monthly gym fee is due in 3 days, on {{expiry_date}}.\n\nThank you,\nMr. Gym',
       'inactivity':
-          'Hi {{member_name}}, we have not seen you at {{gym_name}} for {{days_since_visit}} days. We would love to welcome you back.',
+          'Assalam-o-Alaikum {{member_name}}, we have not seen you at Mr. Gym for {{days_since_visit}} days. We would love to welcome you back.\n\nThank you,\nMr. Gym',
       'trial':
-          'Hi {{member_name}}, your trial at {{gym_name}} is ending soon. Ask the front desk about joining.',
+          'Assalam-o-Alaikum {{member_name}}, your trial at Mr. Gym is ending soon. Ask the front desk about joining.\n\nThank you,\nMr. Gym',
     };
     for (final entry in templates.entries) {
       await _db
@@ -289,6 +296,37 @@ class WorkspaceService {
               locationId: Value(locationId),
               key: entry.key,
               body: entry.value,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+    }
+  }
+
+  Future<void> _seedCancellationReasons(
+    String organizationId,
+    DateTime now,
+  ) async {
+    const defaults = {
+      'price': 'Too expensive',
+      'moving': 'Moving away',
+      'schedule': 'Not enough time',
+      'health': 'Health/personal reasons',
+      'not_satisfied': 'Not satisfied',
+      'equipment': 'Equipment',
+      'trainer': 'Trainer',
+      'another_gym': 'Found another gym',
+      'other': 'Other',
+    };
+    for (final entry in defaults.entries) {
+      await _db
+          .into(_db.cancellationReasons)
+          .insert(
+            CancellationReasonsCompanion.insert(
+              id: _uuid.v4(),
+              organizationId: organizationId,
+              code: entry.key,
+              label: entry.value,
               createdAt: now,
               updatedAt: now,
             ),

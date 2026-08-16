@@ -26,10 +26,12 @@ class CsvInteropService {
       locationId: workspace.location.id,
     );
     final out = StringBuffer()
-      ..writeln('external_member_id,first_name,last_name,phone,email,status');
+      ..writeln(
+        'id,first_name,last_name,phone,status,joined_at,fee_day,gender',
+      );
     for (final m in rows) {
       out.writeln(
-        '${_csv(m.externalMemberId)},${_csv(m.firstName)},${_csv(m.lastName)},${_csv(m.phone)},${_csv(m.email)},${_csv(m.status)}',
+        '${_csv(m.id)},${_csv(m.firstName)},${_csv(m.lastName)},${_csv(m.phone)},${_csv(m.status)},${m.joinedAt?.toIso8601String() ?? ''},${m.feeDay ?? ''},${_csv(m.gender)}',
       );
     }
     return out.toString();
@@ -145,6 +147,26 @@ class CsvInteropService {
     return out.toString();
   }
 
+  Future<String> exportFeeReminders(Workspace workspace) async {
+    final rows =
+        await (_db.select(_db.feeReminders)..where(
+              (t) =>
+                  t.organizationId.equals(workspace.organization.id) &
+                  t.locationId.equals(workspace.location.id),
+            ))
+            .get();
+    final out = StringBuffer()
+      ..writeln(
+        'member_id,fee_cycle_date,reminder_type,status,generated_at,opened_at',
+      );
+    for (final r in rows) {
+      out.writeln(
+        '${_csv(r.memberId)},${r.feeCycleDate.toIso8601String()},${_csv(r.reminderType)},${_csv(r.status)},${r.generatedAt.toIso8601String()},${r.openedAt?.toIso8601String() ?? ''}',
+      );
+    }
+    return out.toString();
+  }
+
   String exportOperations({
     required String locationName,
     required String explanation,
@@ -152,7 +174,7 @@ class CsvInteropService {
     required List<String> locationLines,
   }) {
     final out = StringBuffer()
-      ..writeln('GymPulse operations report')
+      ..writeln('Mr. Gym operations report')
       ..writeln('location,$locationName')
       ..writeln('notes,$explanation')
       ..writeln()

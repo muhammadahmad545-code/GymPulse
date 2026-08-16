@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/theme/gp_theme.dart';
 import '../../data/db/app_database.dart';
 import '../../domain/models/workspace.dart';
+import '../../domain/services/fee_cycle.dart';
+import '../../domain/services/gym_ops_service.dart';
 import '../../domain/services/intelligence_service.dart';
 import '../../domain/services/retention_service.dart';
 import 'member_editor_screen.dart';
@@ -26,6 +29,10 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
   Workspace? _workspace;
   MemberRisk? _risk;
   List<TimelineItem> _timeline = const [];
+  List<FeeReminder> _reminders = const [];
+  List<AttendanceEvent> _attendance = const [];
+  FeeStatus? _fee;
+  AttendanceEvent? _todayMark;
   Trial? _trial;
   String? _error;
 
@@ -57,6 +64,40 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
       final timeline = await ref
           .read(retentionServiceProvider)
           .timeline(workspace: workspace, memberId: widget.memberId);
+      final ops = ref.read(gymOpsServiceProvider);
+      final reminders = await ops.remindersForMember(
+        workspace: workspace,
+        memberId: widget.memberId,
+      );
+      final todayMark = member == null
+          ? null
+          : await ops.todaysAttendance(
+              workspace: workspace,
+              memberId: member.id,
+            );
+      final events = await ref
+          .read(attendanceRepositoryProvider)
+          .list(
+            organizationId: workspace.organization.id,
+            locationId: workspace.location.id,
+            memberId: widget.memberId,
+          );
+      FeeStatus? fee;
+      if (member != null) {
+        final memberships = await ref
+            .read(membershipRepositoryProvider)
+            .list(
+              organizationId: workspace.organization.id,
+              locationId: workspace.location.id,
+              memberId: member.id,
+            );
+        memberships.sort((a, b) => b.endAt.compareTo(a.endAt));
+        fee = ops.feeStatusFor(
+          member: member,
+          todayLocal: DateTime.now(),
+          membership: memberships.isEmpty ? null : memberships.first,
+        );
+      }
       if (!mounted) return;
       setState(() {
         _workspace = workspace;
@@ -71,6 +112,10 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
             .firstWhere((e) => true, orElse: () => null);
         _trial = trial;
         _timeline = timeline;
+        _reminders = reminders;
+        _attendance = events;
+        _fee = fee;
+        _todayMark = todayMark;
       });
     } catch (_) {
       if (!mounted) return;
@@ -78,11 +123,64 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
     }
   }
 
+  Future<void> _markAttendance({bool allowDuplicate = false}) async {
+    final workspace = _workspace;
+    final member = _member;
+    if (workspace == null || member == null) return;
+    final s = ref.read(appStringsProvider);
+    try {
+      await ref
+          .read(gymOpsServiceProvider)
+          .markAttendance(
+            workspace: workspace,
+            memberId: member.id,
+            allowDuplicate: allowDuplicate,
+          );
+      await _load();
+    } on AppException catch (e) {
+      if (e.code != AppErrorCodes.attendanceDuplicateEvent) {
+        setState(() => _error = e.message);
+        return;
+      }
+      final existing = await ref
+          .read(gymOpsServiceProvider)
+          .todaysAttendance(workspace: workspace, memberId: member.id);
+      if (!mounted) return;
+      final again = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(s.attendanceAlreadyMarked),
+          content: Text(
+            [
+              '${member.firstName} ${member.lastName}'.trim(),
+              if (existing != null)
+                DateFormat.jm().format(existing.occurredAtLocal),
+            ].join('\n'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(s.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(s.recordAnotherVisit),
+            ),
+          ],
+        ),
+      );
+      if (again == true) {
+        await _markAttendance(allowDuplicate: true);
+      }
+    }
+  }
+
   Future<void> _addMembership() async {
     final workspace = _workspace;
     final member = _member;
     if (workspace == null || member == null) return;
-    final start = DateTime.now().toUtc();
+    final start = DateTime.now();
+    final end = const FeeCycle().membershipEndFromStart(start);
     try {
       await ref
           .read(membershipRepositoryProvider)
@@ -90,8 +188,8 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
             organizationId: workspace.organization.id,
             locationId: workspace.location.id,
             memberId: member.id,
-            startAt: start,
-            endAt: start.add(const Duration(days: 30)),
+            startAt: start.toUtc(),
+            endAt: DateTime.utc(end.year, end.month, end.day, 23, 59, 59),
             status: 'active',
             currencyCode: workspace.location.currencyCode,
           );
@@ -142,11 +240,55 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
     }
   }
 
+  Future<void> _deactivate() async {
+    final workspace = _workspace;
+    final member = _member;
+    if (workspace == null || member == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(ref.read(appStringsProvider).deactivateMember),
+        content: const Text(
+          'The member stays in history. Attendance and memberships are not deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(ref.read(appStringsProvider).cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(ref.read(appStringsProvider).deactivateMember),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ref
+        .read(memberRepositoryProvider)
+        .update(
+          organizationId: workspace.organization.id,
+          id: member.id,
+          status: 'inactive',
+        );
+    await _load();
+  }
+
   Future<void> _cancelMembership() async {
     final workspace = _workspace;
     if (workspace == null) return;
-    String reason = 'other';
+    await ref
+        .read(gymOpsServiceProvider)
+        .seedDefaultReasons(workspace.organization.id);
+    final reasons =
+        (await ref
+                .read(gymOpsServiceProvider)
+                .listReasons(workspace.organization.id))
+            .where((r) => r.active)
+            .toList();
+    String reason = reasons.isEmpty ? 'other' : reasons.first.code;
     final extra = TextEditingController();
+    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) {
@@ -161,8 +303,8 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                     value: reason,
                     isExpanded: true,
                     items: [
-                      for (final e in CancellationReasons.defaults.entries)
-                        DropdownMenuItem(value: e.key, child: Text(e.value)),
+                      for (final e in reasons)
+                        DropdownMenuItem(value: e.code, child: Text(e.label)),
                     ],
                     onChanged: (v) {
                       if (v != null) setLocal(() => reason = v);
@@ -209,6 +351,43 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
     }
   }
 
+  Future<void> _whatsAppFee() async {
+    final member = _member;
+    final workspace = _workspace;
+    final fee = _fee;
+    if (member == null || workspace == null || fee == null) return;
+    final type = fee.dueIn3Days
+        ? GymOpsService.reminderDueSoon
+        : GymOpsService.reminderDueToday;
+    final message = ref
+        .read(gymOpsServiceProvider)
+        .feeWhatsAppMessage(
+          memberName: '${member.firstName} ${member.lastName}'.trim(),
+          feeDate: fee.nextFeeDate,
+          type: type,
+        );
+    final pending = _reminders.where((r) => r.status == 'pending').toList();
+    try {
+      await ref
+          .read(contactServiceProvider)
+          .openWhatsApp(phone: member.phone ?? '', message: message);
+      if (pending.isNotEmpty) {
+        await ref
+            .read(gymOpsServiceProvider)
+            .markReminderOpened(pending.first.id);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ref.read(appStringsProvider).whatsappOpenedNotSent),
+        ),
+      );
+      await _load();
+    } on AppException catch (e) {
+      setState(() => _error = e.message);
+    }
+  }
+
   Future<void> _contact() async {
     final member = _member;
     final workspace = _workspace;
@@ -217,7 +396,7 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
         .read(intelligenceServiceProvider)
         .templates(workspace.organization.id);
     final template = templates.isEmpty
-        ? 'Hi {{member_name}}'
+        ? 'Assalam-o-Alaikum {{member_name}}'
         : templates.first.body;
     final message = ref
         .read(intelligenceServiceProvider)
@@ -261,6 +440,15 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                           phone: member.phone ?? '',
                           message: controller.text,
                         );
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ref.read(appStringsProvider).whatsappOpenedNotSent,
+                          ),
+                        ),
+                      );
+                    }
                   } on AppException catch (e) {
                     if (ctx.mounted) {
                       ScaffoldMessenger.of(
@@ -322,22 +510,42 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
               padding: const EdgeInsets.all(GpSpacing.lg),
               children: [
                 Text('${s.status}: ${member.status}'),
+                Text('${s.whatsappNumber}: ${member.phone ?? '—'}'),
                 Text(
-                  '${s.externalMemberId}: ${member.externalMemberId ?? '—'}',
+                  '${s.joiningFeeDate}: ${DateFormat.yMMMd().format((member.joinedAt ?? member.createdAt).toLocal())}',
                 ),
-                Text('${s.phoneOptional}: ${member.phone ?? '—'}'),
+                if (_fee != null) ...[
+                  Text('${s.feeStatus}: ${_fee!.label}'),
+                  Text(
+                    '${s.nextFeeDate}: ${DateFormat.yMMMd().format(_fee!.nextFeeDate)}',
+                  ),
+                ],
                 if (_insight?.membership != null)
                   Text(
                     '${s.membership}: ${_insight!.membership!.status} · ${s.expiresInDays(_insight!.daysUntilExpiry ?? 0)}',
                   )
                 else
                   Text(s.noMembership),
+                Text('${s.attendance}: ${_attendance.length}'),
+                if (_todayMark != null)
+                  Text(
+                    '${s.todaysAttendance}: ${DateFormat.jm().format(_todayMark!.occurredAtLocal)}',
+                  ),
                 if (_insight?.daysSinceVisit != null)
                   Text(s.inactiveForDays(_insight!.daysSinceVisit!)),
                 if (_trial != null) Text('${s.trials}: ${_trial!.status}'),
                 if (_error != null)
                   Text(_error!, style: const TextStyle(color: GpColors.danger)),
                 const SizedBox(height: GpSpacing.md),
+                FilledButton(
+                  onPressed: member.status == 'active' ? _markAttendance : null,
+                  child: Text(s.markAttendance),
+                ),
+                const SizedBox(height: GpSpacing.sm),
+                FilledButton.tonal(
+                  onPressed: _whatsAppFee,
+                  child: Text(s.whatsapp),
+                ),
                 if (_risk != null)
                   Card(
                     child: Padding(
@@ -399,6 +607,53 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   onPressed: _cancelMembership,
                   child: Text(s.recordCancellation),
                 ),
+                if (member.status == 'active')
+                  TextButton(
+                    onPressed: _deactivate,
+                    child: Text(s.deactivateMember),
+                  ),
+                const SizedBox(height: GpSpacing.lg),
+                Text(
+                  s.attendance,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (_attendance.isEmpty)
+                  Text(
+                    'No attendance yet.',
+                    style: const TextStyle(color: GpColors.textSecondary),
+                  )
+                else
+                  for (final event in _attendance.take(20))
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        DateFormat.yMMMd().add_jm().format(
+                          event.occurredAtLocal,
+                        ),
+                      ),
+                      subtitle: Text(
+                        event.isManual ? 'In-app' : event.eventType,
+                      ),
+                    ),
+                const SizedBox(height: GpSpacing.md),
+                Text(
+                  s.reminderHistory,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (_reminders.isEmpty)
+                  const Text(
+                    'No fee reminders yet.',
+                    style: TextStyle(color: GpColors.textSecondary),
+                  )
+                else
+                  for (final reminder in _reminders)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(reminder.reminderType),
+                      subtitle: Text(
+                        '${reminder.status} · ${DateFormat.yMMMd().format(reminder.generatedAt.toLocal())}',
+                      ),
+                    ),
                 const SizedBox(height: GpSpacing.lg),
                 Text(
                   s.memberTimeline,

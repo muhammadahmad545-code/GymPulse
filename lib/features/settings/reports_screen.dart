@@ -74,7 +74,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               '${row.name},${row.visits ?? ''},${row.uniqueVisitors ?? ''},${row.unmatched},${row.activeMembers},${row.explanation}',
           ],
         );
-    await _share('gympulse-operations.csv', csv);
+    await _share('mr-gym-operations.csv', csv);
   }
 
   @override
@@ -98,8 +98,19 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     final workspace = await ref.read(workspaceProvider.future);
                     return ref
                         .read(csvInteropServiceProvider)
+                        .exportMembers(workspace!);
+                  }, 'mr-gym-members.csv'),
+            child: Text(s.exportMembers),
+          ),
+          TextButton(
+            onPressed: _busy
+                ? null
+                : () => _export(() async {
+                    final workspace = await ref.read(workspaceProvider.future);
+                    return ref
+                        .read(csvInteropServiceProvider)
                         .exportAttendance(workspace!);
-                  }, 'gympulse-attendance.csv'),
+                  }, 'mr-gym-attendance.csv'),
             child: Text(s.exportAttendance),
           ),
           TextButton(
@@ -109,8 +120,19 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     final workspace = await ref.read(workspaceProvider.future);
                     return ref
                         .read(csvInteropServiceProvider)
+                        .exportFeeReminders(workspace!);
+                  }, 'mr-gym-fee-reminders.csv'),
+            child: Text(s.exportFeeReminders),
+          ),
+          TextButton(
+            onPressed: _busy
+                ? null
+                : () => _export(() async {
+                    final workspace = await ref.read(workspaceProvider.future);
+                    return ref
+                        .read(csvInteropServiceProvider)
                         .exportFollowUps(workspace!);
-                  }, 'gympulse-followups.csv'),
+                  }, 'mr-gym-followups.csv'),
             child: Text(s.exportFollowUps),
           ),
           TextButton(
@@ -121,7 +143,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     return ref
                         .read(csvInteropServiceProvider)
                         .exportTrials(workspace!);
-                  }, 'gympulse-trials.csv'),
+                  }, 'mr-gym-trials.csv'),
             child: Text(s.exportTrials),
           ),
           TextButton(
@@ -132,7 +154,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     return ref
                         .read(csvInteropServiceProvider)
                         .exportCancellations(workspace!);
-                  }, 'gympulse-cancellations.csv'),
+                  }, 'mr-gym-cancellations.csv'),
             child: Text(s.exportCancellations),
           ),
           if (_message != null) ...[

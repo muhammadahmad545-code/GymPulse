@@ -33,8 +33,8 @@ class LocalNotificationService {
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'gympulse_ops',
-          'GymPulse',
-          channelDescription: 'Backup, import, and follow-up reminders',
+          'Mr. Gym',
+          channelDescription: 'Fee, backup, and follow-up reminders',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
         ),

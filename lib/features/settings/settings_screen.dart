@@ -6,11 +6,10 @@ import '../../app/providers.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
-import '../attendance/import_screen.dart';
 import 'app_update_flow.dart';
 import 'backup_settings_screen.dart';
+import 'cancellation_reasons_screen.dart';
 import 'gym_settings_screen.dart';
-import 'locations_screen.dart';
 import 'notification_settings_screen.dart';
 import 'reports_screen.dart';
 
@@ -119,22 +118,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(s.importAttendance),
+          title: Text(s.cancellationReasons),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const ImportScreen()));
-          },
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(s.locations),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const LocationsScreen()));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const CancellationReasonsScreen(),
+              ),
+            );
           },
         ),
         ListTile(

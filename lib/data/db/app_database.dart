@@ -76,6 +76,8 @@ class LocationAccess extends Table {
   name: 'members_org_location_idx',
   columns: {#organizationId, #locationId},
 )
+@TableIndex(name: 'members_name_idx', columns: {#firstName, #lastName})
+@TableIndex(name: 'members_phone_idx', columns: {#phone})
 class Members extends Table {
   TextColumn get id => text()();
   TextColumn get organizationId => text()();
@@ -86,6 +88,12 @@ class Members extends Table {
   TextColumn get phone => text().nullable()();
   TextColumn get email => text().nullable()();
   TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get joinedAt => dateTime().nullable()();
+  IntColumn get feeDay => integer().nullable()();
+  TextColumn get gender => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  BoolColumn get whatsappEnabled =>
+      boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -150,6 +158,10 @@ class AttendanceSources extends Table {
   name: 'attendance_org_location_time_idx',
   columns: {#organizationId, #locationId, #occurredAtUtc},
 )
+@TableIndex(
+  name: 'attendance_member_local_date_idx',
+  columns: {#memberId, #localDate},
+)
 class AttendanceEvents extends Table {
   TextColumn get id => text()();
   TextColumn get organizationId => text()();
@@ -165,6 +177,8 @@ class AttendanceEvents extends Table {
   DateTimeColumn get ingestedAt => dateTime()();
   TextColumn get matchStatus =>
       text().withDefault(const Constant('unmatched'))();
+  TextColumn get localDate => text().nullable()();
+  BoolColumn get isManual => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -237,6 +251,45 @@ class MessageTemplates extends Table {
   TextColumn get channel => text().withDefault(const Constant('whatsapp'))();
   BoolColumn get active => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@TableIndex(
+  name: 'cancel_reasons_org_code_uidx',
+  columns: {#organizationId, #code},
+  unique: true,
+)
+class CancellationReasons extends Table {
+  TextColumn get id => text()();
+  TextColumn get organizationId => text()();
+  TextColumn get code => text()();
+  TextColumn get label => text()();
+  BoolColumn get active => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@TableIndex(
+  name: 'fee_reminders_cycle_uidx',
+  columns: {#memberId, #feeCycleDate, #reminderType},
+  unique: true,
+)
+class FeeReminders extends Table {
+  TextColumn get id => text()();
+  TextColumn get organizationId => text()();
+  TextColumn get locationId => text()();
+  TextColumn get memberId => text()();
+  DateTimeColumn get feeCycleDate => dateTime()();
+  TextColumn get reminderType => text()();
+  DateTimeColumn get generatedAt => dateTime()();
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -425,7 +478,9 @@ class BackupReminderSettings extends Table {
     Trials,
     FollowUps,
     MessageTemplates,
+    CancellationReasons,
     CancellationEvents,
+    FeeReminders,
     RiskScores,
     DailyMemberMetrics,
     GymDailyMetrics,
@@ -443,7 +498,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -456,6 +511,35 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3 && from >= 2) {
         await m.addColumn(locationSettings, locationSettings.riskWeightsJson);
         await m.addColumn(locationSettings, locationSettings.trialDefaultDays);
+      }
+      if (from < 4) {
+        await m.addColumn(members, members.joinedAt);
+        await m.addColumn(members, members.feeDay);
+        await m.addColumn(members, members.gender);
+        await m.addColumn(members, members.notes);
+        await m.addColumn(members, members.whatsappEnabled);
+        await m.addColumn(attendanceEvents, attendanceEvents.localDate);
+        await m.addColumn(attendanceEvents, attendanceEvents.isManual);
+        await m.createTable(cancellationReasons);
+        await m.createTable(feeReminders);
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS members_name_idx ON members (first_name, last_name)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS members_phone_idx ON members (phone)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS attendance_member_local_date_idx ON attendance_events (member_id, local_date)',
+        );
+        await customStatement(
+          'UPDATE members SET joined_at = created_at WHERE joined_at IS NULL',
+        );
+        await customStatement(
+          "UPDATE members SET fee_day = CAST(strftime('%d', created_at) AS INTEGER) WHERE fee_day IS NULL",
+        );
+        await customStatement(
+          "UPDATE attendance_events SET local_date = substr(occurred_at_local, 1, 10) WHERE local_date IS NULL",
+        );
       }
     },
   );

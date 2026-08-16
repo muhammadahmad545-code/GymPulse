@@ -227,12 +227,23 @@ class AttendanceIngestService {
       organizationId: workspace.organization.id,
       locationId: workspace.location.id,
     );
+    final events = await _attendance.list(
+      organizationId: workspace.organization.id,
+      locationId: workspace.location.id,
+    );
+    if (events.isNotEmpty) {
+      return AttendanceSourceHealth(
+        status: AttendanceSourceHealthStatus.ready,
+        lastSuccessAt: source?.lastSuccessAt ?? events.first.ingestedAt,
+        lastAttemptAt: source?.lastAttemptAt,
+      );
+    }
     if (source == null || source.lastSuccessAt == null) {
       return AttendanceSourceHealth(
         status: AttendanceSourceHealthStatus.unavailable,
         lastSuccessAt: source?.lastSuccessAt,
         lastAttemptAt: source?.lastAttemptAt,
-        message: 'No successful attendance import yet.',
+        message: 'No attendance has been recorded yet.',
       );
     }
     final staleAfter = Duration(hours: workspace.settings.staleImportHours);

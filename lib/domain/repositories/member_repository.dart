@@ -10,6 +10,11 @@ abstract class MemberRepository {
     String? phone,
     String? email,
     String status = 'active',
+    DateTime? joinedAt,
+    int? feeDay,
+    String? gender,
+    String? notes,
+    bool whatsappEnabled = true,
   });
 
   Future<Member?> get({required String organizationId, required String id});
@@ -28,5 +33,10 @@ abstract class MemberRepository {
     String? email,
     String? status,
     String? externalMemberId,
+    DateTime? joinedAt,
+    int? feeDay,
+    String? gender,
+    String? notes,
+    bool? whatsappEnabled,
   });
 }

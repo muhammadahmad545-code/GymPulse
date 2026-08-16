@@ -1,3 +1,5 @@
+> **SUPERSEDED where it conflicts with Mr. Gym.** Attendance import, multi-location, and biometric flows are not user-facing. See [19_MR_GYM_FINAL.md](19_MR_GYM_FINAL.md).
+
 # GymPulse — Functional Feature Specification
 
 ## 1. Authentication (local PIN / passcode)

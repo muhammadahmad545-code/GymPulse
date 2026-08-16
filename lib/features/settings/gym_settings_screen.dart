@@ -144,13 +144,6 @@ class _GymSettingsScreenState extends ConsumerState<GymSettingsScreen> {
           ),
           const SizedBox(height: GpSpacing.md),
           TextField(
-            controller: _staleHours,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(labelText: s.staleImportHours),
-          ),
-          const SizedBox(height: GpSpacing.md),
-          TextField(
             controller: _monitor,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],

@@ -30,6 +30,6 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(find.text('Create your app PIN'), findsOneWidget);
-    expect(find.text('GymPulse'), findsWidgets);
+    expect(find.text('Mr. Gym'), findsWidgets);
   });
 }

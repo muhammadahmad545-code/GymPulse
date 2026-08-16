@@ -35,7 +35,7 @@ class OpsNotifier {
     if (prefs[OpsNotifyKeys.dailySummary] ?? true) {
       await notifications.show(
         id: 30,
-        title: 'GymPulse daily summary',
+        title: 'Mr. Gym daily summary',
         body: snapshot.daily.explanation,
       );
     }

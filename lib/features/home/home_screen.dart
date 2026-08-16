@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../app/providers.dart';
 import '../../core/theme/gp_logo.dart';
 import '../../core/theme/gp_theme.dart';
-import '../../domain/services/intelligence_service.dart';
+import '../../domain/services/gym_ops_service.dart';
 import '../../domain/services/operations_service.dart';
 import '../../domain/services/retention_service.dart';
 import '../members/member_detail_screen.dart';
@@ -20,7 +20,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  DashboardSnapshot? _snap;
+  GymDashboard? _dash;
   RetentionSnapshot? _retention;
   OperationsSnapshot? _ops;
   String? _error;
@@ -40,12 +40,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final workspace = await ref.read(workspaceProvider.future);
       if (workspace == null) return;
+      final ops = ref.read(gymOpsServiceProvider);
+      await ops.seedDefaultReasons(workspace.organization.id);
+      final created = await ops.generateDueReminders(workspace: workspace);
+      final prefs = await ref
+          .read(operationsServiceProvider)
+          .notificationPrefs(workspace.organization.id);
+      if (prefs[OpsNotifyKeys.feeReminders] ?? true) {
+        for (final reminder in created) {
+          final member = await ref
+              .read(memberRepositoryProvider)
+              .get(
+                organizationId: workspace.organization.id,
+                id: reminder.memberId,
+              );
+          final name = member == null
+              ? 'A member'
+              : '${member.firstName} ${member.lastName}'.trim();
+          final dueToday =
+              reminder.reminderType == GymOpsService.reminderDueToday;
+          await ref
+              .read(localNotificationServiceProvider)
+              .show(
+                id: 200 + reminder.id.hashCode.abs() % 1000,
+                title: dueToday ? 'Fee due today' : 'Fee due in 3 days',
+                body: dueToday
+                    ? "$name's gym fee is due today."
+                    : "$name's gym fee is due in 3 days.",
+              );
+        }
+      }
+      final dash = await ops.dashboard(workspace: workspace);
       final health = await ref
           .read(attendanceIngestServiceProvider)
           .importHealth(workspace);
-      final snap = await ref
-          .read(intelligenceServiceProvider)
-          .dashboard(workspace: workspace, importHealth: health);
       final backup = await ref.read(backupServiceProvider).status();
       if (backup.isStale) {
         await ref
@@ -53,23 +81,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             .show(
               id: 11,
               title: 'Backup reminder',
-              body:
-                  'Your GymPulse backup is stale. Create an encrypted backup.',
-            );
-      }
-      if (!health.isDataReliable) {
-        await ref
-            .read(localNotificationServiceProvider)
-            .show(
-              id: 12,
-              title: 'Attendance import',
-              body: health.message ?? 'Attendance data may be delayed.',
+              body: 'Your Mr. Gym backup is stale. Create an encrypted backup.',
             );
       }
       final retention = await ref
           .read(retentionServiceProvider)
           .snapshot(workspace: workspace, importHealth: health);
-      final ops = await ref
+      final opsSnap = await ref
           .read(operationsServiceProvider)
           .snapshot(workspace: workspace, importHealth: health);
       await ref
@@ -77,13 +95,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .maybeNotify(
             workspace: workspace,
             importHealth: health,
-            snapshot: ops,
+            snapshot: opsSnap,
           );
       if (!mounted) return;
       setState(() {
-        _snap = snap;
+        _dash = dash;
         _retention = retention;
-        _ops = ops;
+        _ops = opsSnap;
       });
     } catch (_) {
       if (!mounted) return;
@@ -103,8 +121,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_error != null) {
       return _Message(text: _error!, action: s.retry, onTap: _load);
     }
-    final snap = _snap;
-    if (workspace == null || snap == null) {
+    final dash = _dash;
+    if (workspace == null || dash == null) {
       return _Message(
         text: s.somethingWentWrong,
         action: s.retry,
@@ -130,7 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     Text(
-                      '${workspace.location.name} · ${workspace.location.timezone} · ${workspace.location.currencyCode}',
+                      s.tagline,
                       style: const TextStyle(color: GpColors.textSecondary),
                     ),
                   ],
@@ -141,9 +159,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: GpSpacing.lg),
           const UpdateAvailableBanner(),
           const SizedBox(height: GpSpacing.md),
-          _HealthCard(score: snap.healthScore),
+          Row(
+            children: [
+              Expanded(
+                child: _StatCard(
+                  label: s.todaysAttendance,
+                  value: '${dash.todayAttendance}',
+                ),
+              ),
+              const SizedBox(width: GpSpacing.md),
+              Expanded(
+                child: _StatCard(
+                  label: s.activeMembers,
+                  value: '${dash.activeMembers}',
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: GpSpacing.md),
-          _AttendanceCard(summary: snap.attendance),
+          Row(
+            children: [
+              Expanded(
+                child: _StatCard(
+                  label: s.feesDueToday,
+                  value: '${dash.feesDueToday.length}',
+                ),
+              ),
+              const SizedBox(width: GpSpacing.md),
+              Expanded(
+                child: _StatCard(
+                  label: s.feesDueIn3Days,
+                  value: '${dash.feesDueIn3Days.length}',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: GpSpacing.md),
+          _StatCard(label: s.overdueMembers, value: '${dash.overdue.length}'),
           if (_ops != null) ...[
             const SizedBox(height: GpSpacing.md),
             Card(
@@ -155,6 +207,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
           const SizedBox(height: GpSpacing.md),
           _BackupBanner(),
+          const SizedBox(height: GpSpacing.md),
+          _MemberListCard(
+            title: s.feesDueToday,
+            empty: 'No fees due today.',
+            rows: dash.feesDueToday,
+          ),
+          const SizedBox(height: GpSpacing.md),
+          _MemberListCard(
+            title: s.feesDueIn3Days,
+            empty: 'No fees due in the next 3 days.',
+            rows: dash.feesDueIn3Days,
+          ),
+          const SizedBox(height: GpSpacing.md),
+          _MemberListCard(
+            title: s.overdueMembers,
+            empty: 'No overdue members.',
+            rows: dash.overdue,
+          ),
+          const SizedBox(height: GpSpacing.md),
+          _MemberListCard(
+            title: s.notAttendedRecently,
+            empty: 'Everyone has attended recently.',
+            rows: dash.inactive.take(8).toList(),
+          ),
           const SizedBox(height: GpSpacing.md),
           if (_retention != null)
             _ListCard(
@@ -186,55 +262,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           const SizedBox(height: GpSpacing.md),
           _ListCard(
-            title: s.needsAttention,
-            empty: s.noAttention,
+            title: s.recentAttendance,
+            empty: 'No attendance recorded yet.',
             children: [
-              for (final item in snap.expiring.take(5))
+              for (final event in dash.recentAttendance)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    '${item.member.firstName} ${item.member.lastName}'.trim(),
+                  title: Text(event.externalMemberId),
+                  subtitle: Text(
+                    DateFormat.yMMMd().add_jm().format(event.occurredAtLocal),
                   ),
-                  subtitle: Text(s.expiresInDays(item.daysUntilExpiry ?? 0)),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          MemberDetailScreen(memberId: item.member.id),
-                    ),
-                  ),
-                ),
-              for (final item in snap.inactive.take(5))
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    '${item.member.firstName} ${item.member.lastName}'.trim(),
-                  ),
-                  subtitle: Text(s.inactiveForDays(item.daysSinceVisit ?? 0)),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          MemberDetailScreen(memberId: item.member.id),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: GpSpacing.md),
-          _ListCard(
-            title: s.peakHours,
-            empty: s.noPeakHours,
-            children: [
-              for (final peak in snap.peakHours)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('${peak.hour.toString().padLeft(2, '0')}:00'),
-                  subtitle: Text('${peak.visits} ${s.visits} · ${peak.label}'),
+                  onTap: event.memberId == null
+                      ? null
+                      : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                MemberDetailScreen(memberId: event.memberId!),
+                          ),
+                        ),
                 ),
             ],
           ),
           const SizedBox(height: GpSpacing.md),
           Text(
-            '${s.activeMembers}: ${snap.activeMembers} · ${s.openActions}: ${snap.openFollowUps} · ${s.unmatched}: ${snap.unmatchedEvents}',
+            '${s.openActions}: ${dash.openFollowUps} · ${s.reminderHistory}: ${dash.pendingReminders.length} pending',
             style: const TextStyle(color: GpColors.textSecondary),
           ),
         ],
@@ -243,9 +294,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _HealthCard extends StatelessWidget {
-  const _HealthCard({required this.score});
-  final HealthScore score;
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.label, required this.value});
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
@@ -255,18 +307,9 @@ class _HealthCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Gym Health', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: GpSpacing.sm),
-            Text(
-              score.hasEnoughData ? '${score.score}' : 'Not enough data',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: score.hasEnoughData
-                    ? GpColors.primary
-                    : GpColors.warning,
-              ),
-            ),
-            const SizedBox(height: GpSpacing.sm),
-            Text(score.explanation),
+            Text(label, style: const TextStyle(color: GpColors.textSecondary)),
+            const SizedBox(height: GpSpacing.xs),
+            Text(value, style: Theme.of(context).textTheme.headlineSmall),
           ],
         ),
       ),
@@ -274,46 +317,39 @@ class _HealthCard extends StatelessWidget {
   }
 }
 
-class _AttendanceCard extends StatelessWidget {
-  const _AttendanceCard({required this.summary});
-  final AttendanceSummary summary;
+class _MemberListCard extends StatelessWidget {
+  const _MemberListCard({
+    required this.title,
+    required this.empty,
+    required this.rows,
+  });
+  final String title;
+  final String empty;
+  final List<MemberDirectoryRow> rows;
 
   @override
   Widget build(BuildContext context) {
-    final last = summary.health.lastSuccessAt;
-    final lastLabel = last == null
-        ? 'Never'
-        : DateFormat.yMMMd().add_Hm().format(last.toLocal());
-    final stale = !summary.reliable;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(GpSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Attendance (7 days)',
-              style: Theme.of(context).textTheme.titleLarge,
+    return _ListCard(
+      title: title,
+      empty: empty,
+      children: [
+        for (final row in rows.take(8))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(row.displayName),
+            subtitle: Text(
+              [
+                row.fee.label,
+                if (row.member.phone != null) row.member.phone!,
+              ].join(' · '),
             ),
-            const SizedBox(height: GpSpacing.sm),
-            if (stale)
-              Text(
-                summary.health.message ??
-                    'Attendance data is stale or unavailable. Counts are not treated as zero.',
-                style: const TextStyle(color: GpColors.warning),
-              )
-            else
-              Text(
-                '${summary.visits} visits · ${summary.uniqueVisitors} unique',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => MemberDetailScreen(memberId: row.member.id),
               ),
-            const SizedBox(height: GpSpacing.sm),
-            Text(
-              'Last successful import: $lastLabel',
-              style: const TextStyle(color: GpColors.textSecondary),
             ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 }
